@@ -41,7 +41,19 @@ export const getBookings = () => api.get('/bookings');
  */
 export const createBooking = (bookingData) => api.post('/bookings', bookingData);
 
-// Add this to the end of src/services/api.js
+/**
+ * Generates a payment signature for PayFast.
+ * @param {Object} paymentData The payment data.
+ * @returns {Promise<Object>} A promise that resolves to the payment signature.
+ */
 export const generatePaymentSignature = (paymentData) => api.post('/generate-signature', paymentData);
-// We can add more API functions here as we build out the app.
+
+/**
+ * --- THIS IS THE NEW FUNCTION ---
+ * Fetches all unavailable dates for a specific property.
+ * @param {string} propertyId The ID of the property.
+ * @returns {Promise<Array<string>>} A promise that resolves to an array of unavailable date strings (e.g., ['2024-07-20', '2024-07-21']).
+ */
 export const getUnavailableDates = (propertyId) => api.get(`/properties/${propertyId}/availability`);
+
+// We can add more API functions here as we build out the app.
