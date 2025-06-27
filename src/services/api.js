@@ -49,7 +49,21 @@ export const createBooking = (bookingData) => api.post('/bookings', bookingData)
 export const generatePaymentSignature = (paymentData) => api.post('/generate-signature', paymentData);
 
 /**
- * --- THIS IS THE NEW FUNCTION ---
+ * --- NEW: Initiates an Ozow payment ---
+ * @param {Object} paymentData The payment data for Ozow.
+ * @returns {Promise<Object>} A promise that resolves to the Ozow redirect URL.
+ */
+export const initiateOzowPayment = (paymentData) => api.post('/payments/ozow/initiate', paymentData);
+
+/**
+ * --- NEW: Initiates a QR Code payment ---
+ * @param {Object} paymentData The payment data for Zapper/SnapScan.
+ * @returns {Promise<Object>} A promise that resolves to the QR code data.
+ */
+export const initiateQrCodePayment = (paymentData) => api.post('/payments/qrcode', paymentData);
+
+
+/**
  * Fetches all unavailable dates for a specific property.
  * @param {string} propertyId The ID of the property.
  * @returns {Promise<Array<string>>} A promise that resolves to an array of unavailable date strings (e.g., ['2024-07-20', '2024-07-21']).

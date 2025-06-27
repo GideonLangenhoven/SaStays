@@ -6,9 +6,11 @@ import { ThemeProvider } from '@/hooks/use-theme';
 import Index from '@/pages/Index';
 import Amenities from '@/pages/Amenities';
 import Apartments from '@/pages/Apartments';
+import ApartmentPage from '@/pages/ApartmentPage'; // <-- Import ApartmentPage
 import BookingPage from '@/pages/BookingPage';
 import Contact from '@/pages/Contact';
 import Gallery from '@/pages/Gallery';
+import RateYourStay from '@/pages/RateYourStay'; // <-- Import RateYourStay
 import NotFound from '@/pages/NotFound';
 
 const App = () => {
@@ -20,9 +22,11 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="/amenities" element={<Amenities />} />
             <Route path="/apartments" element={<Apartments />} />
+            <Route path="/apartments/:id" element={<ApartmentPage />} /> {/* <-- Add route for single apartment */}
             <Route path="/booking" element={<BookingPage />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/gallery" element={<Gallery />} />
+            <Route path="/rate-your-stay" element={<RateYourStay />} /> {/* <-- Add route for rating */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

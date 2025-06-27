@@ -1,15 +1,13 @@
 // server/index.js
 
-const path = require('path'); // Import the 'path' module
-
-// --- THIS IS THE FINAL FIX ---
-// We tell dotenv the exact path to the .env file.
+const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const apiRoutes = require('./routes');
+require('./scheduler'); // <-- ADD THIS LINE TO INITIALIZE THE SCHEDULER
 
 const app = express();
 const PORT = 5001;

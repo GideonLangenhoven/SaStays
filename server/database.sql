@@ -1,6 +1,7 @@
 -- server/database.sql
 
 -- Drop existing tables in reverse order of creation to avoid dependency errors
+DROP TABLE IF EXISTS ratings;
 DROP TABLE IF EXISTS property_availability;
 DROP TABLE IF EXISTS bookings;
 DROP TABLE IF EXISTS customers;
@@ -35,11 +36,12 @@ CREATE TABLE bookings (
     end_date DATE NOT NULL,
     total_price DECIMAL(10, 2) NOT NULL,
     status VARCHAR(50) DEFAULT 'pending', -- 'pending', 'confirmed', 'cancelled'
+    payment_provider VARCHAR(50),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT chk_dates CHECK (end_date > start_date)
 );
 
--- NEW: Create the 'property_availability' table to track daily availability.
+-- Create the 'property_availability' table to track daily availability.
 CREATE TABLE property_availability (
     id SERIAL PRIMARY KEY,
     property_id INT REFERENCES properties(id) ON DELETE CASCADE,
@@ -48,6 +50,18 @@ CREATE TABLE property_availability (
     booking_id INT REFERENCES bookings(id) ON DELETE SET NULL, -- Optional: link to the booking that blocked this date
     UNIQUE(property_id, date) -- Ensures no duplicate entries for the same day and property
 );
+
+-- Create the 'ratings' table to store post-stay ratings and reviews.
+CREATE TABLE ratings (
+    id SERIAL PRIMARY KEY,
+    booking_id INT REFERENCES bookings(id) ON DELETE CASCADE,
+    customer_id INT REFERENCES customers(id) ON DELETE CASCADE,
+    property_id INT REFERENCES properties(id) ON DELETE CASCADE,
+    rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    review TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 
 -- Insert some sample data
 INSERT INTO properties (name, description, price_per_night, capacity, location, amenities, image_url) VALUES
