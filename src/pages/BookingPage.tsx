@@ -1,6 +1,8 @@
+// src/pages/BookingPage.tsx
+
 import { useEffect, useState } from "react";
 import { format, addDays, differenceInDays, parseISO, isSameDay } from "date-fns";
-import { Link, useSearchParams } from "react-router-dom"; // Import useSearchParams
+import { Link, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { cn } from "@/lib/utils";
@@ -46,8 +48,6 @@ export default function BookingPage() {
     const [searchParams] = useSearchParams();
     const [isBookingConfirmed, setIsBookingConfirmed] = useState(searchParams.get('payment') === 'success');
 
-  // --- THIS IS THE NEW CHANGE FOR EASY TESTING ---
-  // Pre-populate the form with dummy data.
   const [formData, setFormData] = useState({
     firstName: "John",
     lastName: "Doe",
@@ -104,7 +104,6 @@ export default function BookingPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // --- THIS IS THE NEW VALIDATION ---
     const requiredFields: (keyof typeof formData)[] = ['firstName', 'lastName', 'email', 'phone', 'address', 'city', 'zipCode', 'country'];
     for (const field of requiredFields) {
         if (!formData[field]) {
@@ -135,6 +134,15 @@ export default function BookingPage() {
         const bookingResponse = await createBooking(bookingData);
         const { bookingId } = bookingResponse.data;
 
+        // UPDATE THE CALENDAR IN REAL-TIME
+        const newUnavailableDates = [];
+        let currentDate = new Date(startDate);
+        while (currentDate <= endDate) {
+            newUnavailableDates.push(new Date(currentDate));
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        setUnavailableDates(prev => [...prev, ...newUnavailableDates]);
+
         if (formData.paymentMethod === 'payfast') {
             const signatureData = {
                 total_price: totalPrice,
@@ -147,14 +155,17 @@ export default function BookingPage() {
             const queryString = new URLSearchParams(paymentDetails).toString();
             window.location.href = `https://sandbox.payfast.co.za/eng/process?${queryString}`;
         } else {
-            // Handle other payment methods here
             setCurrentStep(3);
             setIsBookingConfirmed(true);
         }
 
-    } catch (error) {
-        console.error("Error during booking process:", error);
-        alert("There was an error processing your booking. Please try again.");
+    } catch (error: any) {
+        if (error.response && error.response.status === 409) {
+            alert("One or more of the selected dates are not available. Please select different dates.");
+        } else {
+            console.error("Error during booking process:", error);
+            alert("There was an error processing your booking. Please try again.");
+        }
         setIsLoading(false);
     }
   };
@@ -164,8 +175,6 @@ export default function BookingPage() {
       <Navbar />
       
       <main className="flex-1 pt-20">
-          {/* The entire JSX for the page layout and all steps is included here. */}
-          {/* It's long, but it's complete and will render correctly. */}
         <section className="relative py-16 bg-gradient-to-r from-sea-light to-white dark:from-sea-dark dark:to-background overflow-hidden">
           <div className="container relative z-10"><div className="max-w-3xl mx-auto text-center animate-fade-in"><h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">Book Your Stay</h1><p className="text-muted-foreground text-lg">Complete your reservation in a few simple steps.</p></div></div>
           <div className="absolute top-0 right-0 w-1/3 h-full opacity-10"><div className="absolute top-10 right-10 w-64 h-64 rounded-full bg-primary/50 blur-3xl" /><div className="absolute bottom-10 right-40 w-48 h-48 rounded-full bg-sea-light blur-3xl" /></div>

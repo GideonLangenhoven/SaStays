@@ -18,20 +18,31 @@ const createSignature = (data) => {
     return crypto.createHash('md5').update(dataString).digest('hex');
 };
 
-// --- Main Booking Endpoint (already exists, no changes needed here) ---
+// --- Main Booking Endpoint (UPDATED) ---
 router.post('/bookings', async (req, res) => {
     console.log('[SERVER LOG] --- Received new request to /api/bookings ---');
     const { property_id, start_date, end_date, total_price, fullName, email, phone, payment_provider } = req.body;
     console.log('[SERVER LOG] Request Body:', req.body);
-    
+
     const client = await pool.connect();
     try {
+        // Check for date availability before starting the transaction
+        const availabilityCheck = await client.query(
+            'SELECT date FROM property_availability WHERE property_id = $1 AND date >= $2 AND date < $3 AND is_available = false',
+            [property_id, start_date, end_date]
+        );
+
+        if (availabilityCheck.rows.length > 0) {
+            // Dates are not available, return an error
+            return res.status(409).json({ error: 'One or more of the selected dates are not available.' });
+        }
+
         await client.query('BEGIN');
         console.log('[SERVER LOG] Database transaction started.');
 
         const propertyResult = await client.query('SELECT * FROM properties WHERE id = $1', [property_id]);
         if (propertyResult.rows.length === 0) throw new Error("Property not found");
-        
+
         let customerResult = await client.query('SELECT * FROM customers WHERE email = $1', [email]);
         let customer;
         if (customerResult.rows.length > 0) {
@@ -47,9 +58,21 @@ router.post('/bookings', async (req, res) => {
             [property_id, customerId, start_date, end_date, total_price, 'pending', payment_provider]
         );
         const booking = bookingResult.rows[0];
-        
+
+        // Insert the booked dates into the property_availability table
+        const startDate = new Date(booking.start_date);
+        const endDate = new Date(booking.end_date);
+        let currentDate = startDate;
+        while (currentDate < endDate) {
+            await client.query(
+                'INSERT INTO property_availability (property_id, date, is_available, booking_id) VALUES ($1, $2, false, $3)',
+                [property_id, currentDate, booking.id]
+            );
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
         await client.query('COMMIT');
-        
+
         // We will now handle payment initiation separately
         res.status(201).json({ success: true, bookingId: booking.id, propertyName: propertyResult.rows[0].name, totalPrice: booking.total_price });
 
@@ -73,14 +96,14 @@ router.post('/generate-signature', (req, res) => {
     const paymentData = {
         merchant_id: process.env.PAYFAST_MERCHANT_ID,
         merchant_key: process.env.PAYFAST_MERCHANT_KEY,
-        return_url: 'http://localhost:8080/booking-success',
-        cancel_url: 'http://localhost:8080/booking-cancelled',
+        return_url: 'http://localhost:8080/booking?payment=success',
+        cancel_url: 'http://localhost:8080/booking?payment=cancelled',
         notify_url: 'http://localhost:5001/api/payment-notify',
         m_payment_id: bookingId.toString(),
         amount: total_price.toFixed(2),
         item_name: `Booking for ${propertyName}`,
     };
-    
+
     const dataForSignature = { ...paymentData };
     if (passphrase) {
         dataForSignature.passphrase = passphrase;
@@ -88,7 +111,7 @@ router.post('/generate-signature', (req, res) => {
 
     const signature = createSignature(dataForSignature);
     console.log('[SERVER LOG] Signature generated successfully.');
-    
+
     res.json({ ...paymentData, signature });
 });
 
@@ -97,7 +120,7 @@ router.post('/generate-signature', (req, res) => {
 router.post('/payments/ozow/initiate', (req, res) => {
     const { bookingId, totalPrice, propertyName } = req.body;
     console.log(`[OZOW] Initiating payment for Booking ID: ${bookingId}`);
-    
+
     // TODO: Replace with actual Ozow API call
     // You'll need to get your SiteCode, PrivateKey, and ApiKey from your Ozow dashboard.
     // const ozowData = {
@@ -132,7 +155,7 @@ router.post('/payments/qrcode', (req, res) => {
     } else if (provider === 'snapscan') {
         qrData = `snapscan://payment?amount=${totalPrice*100}&ref=SAStays-${bookingId}`; // SnapScan often uses cents
     }
-    
+
     res.json({ success: true, qrData });
 });
 
