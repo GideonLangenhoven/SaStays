@@ -1,6 +1,6 @@
 // src/pages/Gallery.tsx
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react"; // Add useCallback
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { cn } from "@/lib/utils";
@@ -101,7 +101,7 @@ export default function Gallery() {
     }
   };
 
-  const navigateGallery = (direction: "prev" | "next") => {
+  const navigateGallery = useCallback((direction: "prev" | "next") => {
     if (selectedImage === null) return;
     const currentIndex = filteredImages.findIndex(img => img.id === selectedImage);
     let newIndex;
@@ -111,7 +111,7 @@ export default function Gallery() {
       newIndex = currentIndex < filteredImages.length - 1 ? currentIndex + 1 : 0;
     }
     setSelectedImage(filteredImages[newIndex].id);
-  };
+  }, [selectedImage, filteredImages]);
   
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -122,7 +122,7 @@ export default function Gallery() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedImage, filteredImages]);
+  }, [selectedImage, navigateGallery]);
   
   return (
     <div className="min-h-screen flex flex-col">

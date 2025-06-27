@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { format, addDays, differenceInDays, parseISO, isSameDay } from "date-fns";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom"; // Import useSearchParams
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { cn } from "@/lib/utils";
@@ -40,7 +40,8 @@ export default function BookingPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isBookingConfirmed, setIsBookingConfirmed] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [isBookingConfirmed, setIsBookingConfirmed] = useState(searchParams.get('payment') === 'success');
 
   // --- THIS IS THE NEW CHANGE FOR EASY TESTING ---
   // Pre-populate the form with dummy data.
@@ -75,6 +76,12 @@ export default function BookingPage() {
   }, [selectedApartment]);
   
   useEffect(() => { window.scrollTo(0, 0); }, []);
+
+  useEffect(() => {
+    if (isBookingConfirmed) {
+      setCurrentStep(3);
+    }
+  }, [isBookingConfirmed]);
   
   const nightsCount = startDate && endDate ? differenceInDays(endDate, startDate) : 0;
   const cleaningFee = 50;
@@ -131,21 +138,10 @@ export default function BookingPage() {
         };
         const signatureResponse = await generatePaymentSignature(signatureData);
         const paymentDetails = signatureResponse.data;
+        
+        const queryString = new URLSearchParams(paymentDetails).toString();
+        window.location.href = `https://sandbox.payfast.co.za/eng/process?${queryString}`;
 
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = 'https://sandbox.payfast.co.za/eng/process';
-        form.style.display = 'none';
-
-        for (const key in paymentDetails) {
-            const input = document.createElement('input');
-            input.name = key;
-            input.value = paymentDetails[key];
-            form.appendChild(input);
-        }
-
-        document.body.appendChild(form);
-        form.submit();
 
     } catch (error) {
         console.error("Error during booking process:", error);
