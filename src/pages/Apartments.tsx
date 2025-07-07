@@ -83,12 +83,27 @@ const allApartments: ApartmentProps[] = [
   },
 ];
 
+// Add a helper to fetch ratings
+async function fetchRatings(propertyId: string) {
+  const res = await fetch(`http://localhost:5001/api/properties/${propertyId}/ratings`);
+  if (!res.ok) return [];
+  return await res.json();
+}
+
+type Rating = {
+  rating: number;
+  review: string;
+  name: string;
+  created_at: string;
+};
+
 export default function Apartments() {
   const { t } = useLanguage();
   const [filteredApartments, setFilteredApartments] = useState<ApartmentProps[]>(allApartments);
   const [capacityFilter, setCapacityFilter] = useState<string>("all");
   const [locationFilter, setLocationFilter] = useState<string>("all");
   const [priceRange, setPriceRange] = useState<number[]>([3500, 20000]);
+  const [apartmentRatings, setApartmentRatings] = useState<Record<string, Rating[]>>({});
   
   useEffect(() => {
     // Scroll to top when component mounts
@@ -115,6 +130,17 @@ export default function Apartments() {
     
     setFilteredApartments(result);
   }, [capacityFilter, locationFilter, priceRange]);
+  
+  useEffect(() => {
+    // Fetch ratings for all apartments in the filtered list
+    filteredApartments.forEach(async (apt) => {
+      if (!apartmentRatings[apt.id]) {
+        const ratings = await fetchRatings(apt.id);
+        setApartmentRatings(prev => ({ ...prev, [apt.id]: ratings }));
+      }
+    });
+    // eslint-disable-next-line
+  }, [filteredApartments]);
   
   // Get unique locations for filter
   const locations = ["all", ...new Set(allApartments.map(apt => apt.location))];
@@ -221,32 +247,35 @@ export default function Apartments() {
         </section>
         
         {/* Apartments Grid */}
-        <section className="section">
-          <div className="container">
-            {filteredApartments.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredApartments.map((apartment, index) => (
-                  <div key={apartment.id} className="animate-fade-in" style={{ animationDelay: `${(index + 1) * 100}ms` }}>
+        <section className="py-12">
+          <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-in">
+            {filteredApartments.map(apartment => (
+              <div key={apartment.id}>
                     <ApartmentCard apartment={apartment} />
+                {/* Show average rating and reviews */}
+                {apartmentRatings[apartment.id] && apartmentRatings[apartment.id].length > 0 && (
+                  <div className="mt-2 bg-muted rounded-lg p-3">
+                    <div className="flex items-center mb-1">
+                      <span className="font-semibold mr-2">{(
+                        apartmentRatings[apartment.id].reduce((sum, r) => sum + r.rating, 0) /
+                        apartmentRatings[apartment.id].length
+                      ).toFixed(1)}</span>
+                      <span className="text-yellow-500">★</span>
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        ({apartmentRatings[apartment.id].length} review{apartmentRatings[apartment.id].length > 1 ? 's' : ''})
+                      </span>
+                    </div>
+                    <ul className="space-y-1">
+                      {apartmentRatings[apartment.id].slice(0, 2).map((r, idx) => (
+                        <li key={idx} className="text-xs text-muted-foreground border-b pb-1 mb-1 last:border-b-0 last:pb-0 last:mb-0">
+                          <span className="font-medium">{r.name}</span>: {r.review} <span className="text-yellow-500">{'★'.repeat(r.rating)}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                ))}
+                )}
               </div>
-            ) : (
-              <div className="text-center py-12 animate-fade-in">
-                <h3 className="text-xl font-semibold mb-2">{t.apartments.filters.noMatch}</h3>
-                <p className="text-muted-foreground mb-6">{t.apartments.filters.adjustFilters}</p>
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setCapacityFilter("all");
-                    setLocationFilter("all");
-                    setPriceRange([100, 350]);
-                  }}
-                >
-                  {t.apartments.filters.resetFilters}
-                </Button>
-              </div>
-            )}
+            ))}
           </div>
         </section>
       </main>

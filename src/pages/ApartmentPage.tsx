@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ApartmentProps } from "@/components/ApartmentCard";
-import { getPropertyById, getRatingsByPropertyId } from "@/services/api";
+import { getPropertyById } from "@/services/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Rating {
@@ -24,12 +24,16 @@ export default function ApartmentPage() {
         if (id) {
             const fetchApartmentDetails = async () => {
                 try {
-                    const [propertyResponse, ratingsResponse] = await Promise.all([
-                        getPropertyById(id),
-                        getRatingsByPropertyId(id)
-                    ]);
+                    const propertyResponse = await getPropertyById(id);
                     setApartment(propertyResponse.data);
-                    setRatings(ratingsResponse.data);
+                    // Fetch ratings using fetch
+                    const ratingsRes = await fetch(`http://localhost:5001/api/properties/${id}/ratings`);
+                    if (ratingsRes.ok) {
+                        const ratingsData = await ratingsRes.json();
+                        setRatings(ratingsData);
+                    } else {
+                        setRatings([]);
+                    }
                 } catch (error) {
                     console.error("Failed to fetch apartment details:", error);
                 }
@@ -54,7 +58,7 @@ export default function ApartmentPage() {
                         <div>
                             <h1 className="text-4xl font-bold mb-4">{apartment.name}</h1>
                             <p className="text-lg text-muted-foreground mb-4">{apartment.description}</p>
-                            <p className="text-2xl font-bold text-primary mb-4">${apartment.price} / night</p>
+                            <p className="text-2xl font-bold text-primary mb-4">R{apartment.price.toLocaleString('en-ZA')} / night</p>
                             <div className="mb-4">
                                 <h3 className="text-xl font-semibold mb-2">Features</h3>
                                 <ul className="list-disc list-inside">

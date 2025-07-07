@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS property_availability;
 DROP TABLE IF EXISTS bookings;
 DROP TABLE IF EXISTS customers;
 DROP TABLE IF EXISTS properties;
+DROP TABLE IF EXISTS owners;
 
 -- Create the 'properties' table to store accommodation listings.
 CREATE TABLE properties (
@@ -62,6 +63,15 @@ CREATE TABLE ratings (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create the 'owners' table for owner registration and email confirmation
+CREATE TABLE IF NOT EXISTS owners (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'active'
+    confirmation_token VARCHAR(255),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
 
 -- Insert some sample data
 INSERT INTO properties (name, description, price_per_night, capacity, location, amenities, image_url) VALUES

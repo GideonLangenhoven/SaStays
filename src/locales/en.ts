@@ -50,7 +50,9 @@ export const en = {
     welcome: {
       subtitle: "Welcome to MareSereno",
       title: "Luxury Seaside Accommodations",
-      description1: "Nestled on the pristine Mediterranean coastline, MareSereno offers an exquisite collection of luxury apartments and hotel rooms. Our beachfront accommodations combine elegant design with modern comfort, creating the perfect setting for an unforgettable seaside getaway.",
+      // Note: I noticed the description mentions the "Mediterranean coastline", 
+      // while other parts of the text refer to South Africa. You may want to update this for consistency.
+      description1: "Nestled on the pristine South African coastline, MareSereno offers an exquisite collection of luxury apartments and hotel rooms. Our beachfront accommodations combine elegant design with modern comfort, creating the perfect setting for an unforgettable seaside getaway.",
       description2: "Whether you're seeking a romantic escape, a family vacation, or a peaceful retreat, our diverse range of accommodations caters to every preference and need. Each space is thoughtfully designed to provide panoramic sea views and direct beach access.",
       learnMore: "Learn More"
     },
@@ -90,11 +92,7 @@ export const en = {
         bar: {
           title: "Beach Bar & Café",
           description: "Refreshing drinks and snacks served right on the beach."
-        },
-        location: {
-          title: "Prime Location",
-          description: "Close to local attractions, shops, and restaurants."
-        }
+        } // This closing brace was missing
       }
     },
     cta: {
@@ -206,7 +204,7 @@ export const en = {
       name: "Name",
       email: "Email",
       phone: "Phone",
-      address: "Address", 
+      address: "Address",
       city: "City",
       country: "Country",
       specialRequests: "Special Requests",

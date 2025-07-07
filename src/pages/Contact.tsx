@@ -50,9 +50,8 @@ export default function Contact() {
   };
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      
       <main className="flex-1 pt-20">
         {/* Header Section */}
         <section className="relative py-20 bg-gradient-to-r from-sea-light to-white dark:from-sea-dark dark:to-background overflow-hidden">
@@ -66,22 +65,19 @@ export default function Contact() {
               </p>
             </div>
           </div>
-          
           {/* Decorative elements */}
-          <div className="absolute top-0 right-0 w-1/3 h-full opacity-10">
-            <div className="absolute top-10 right-10 w-64 h-64 rounded-full bg-primary/50 blur-3xl" />
-            <div className="absolute bottom-10 right-40 w-48 h-48 rounded-full bg-sea-light blur-3xl" />
+          <div className="absolute bottom-0 right-0 w-1/2 h-1/2 opacity-10 pointer-events-none">
+            <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full bg-primary/50 blur-3xl" />
+            <div className="absolute top-10 right-40 w-48 h-48 rounded-full bg-sea-light blur-3xl" />
           </div>
         </section>
-        
         {/* Contact Information & Form */}
-        <section className="section">
+        <section className="section bg-white dark:bg-card">
           <div className="container">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               {/* Contact Information */}
               <div className="animate-fade-in [animation-delay:100ms]">
                 <h2 className="text-2xl font-bold mb-6">{t.contact.getInTouch}</h2>
-                
                 <div className="glass-card p-6 space-y-6 mb-8">
                   <div className="flex items-start">
                     <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-4">
@@ -96,7 +92,6 @@ export default function Contact() {
                       </p>
                     </div>
                   </div>
-                  
                   <div className="flex items-start">
                     <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-4">
                       <span />
@@ -107,7 +102,6 @@ export default function Contact() {
                       <p className="text-muted-foreground">+27 82 555 6789 (Mobile/WhatsApp)</p>
                     </div>
                   </div>
-                  
                   <div className="flex items-start">
                     <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-4">
                       <span />
@@ -118,7 +112,6 @@ export default function Contact() {
                       <p className="text-muted-foreground">bookings@campsbayvillas.co.za</p>
                     </div>
                   </div>
-                  
                   <div className="flex items-start">
                     <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-4">
                       <span />
@@ -133,7 +126,6 @@ export default function Contact() {
                     </div>
                   </div>
                 </div>
-                
                 <div className="aspect-video rounded-xl overflow-hidden">
                   <iframe
                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d52865.74563455998!2d18.3541877!3d-33.9521514!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1dcc6750a8f2f9d9%3A0x3f3e3b9b9b9b9b9b!2sCamps%20Bay%2C%20Cape%20Town%2C%20South%20Africa!5e0!3m2!1sen!2sza!4v1628613152777!5m2!1sen!2sza"
@@ -146,11 +138,9 @@ export default function Contact() {
                   />
                 </div>
               </div>
-              
               {/* Contact Form */}
               <div className="animate-fade-in [animation-delay:300ms]">
                 <h2 className="text-2xl font-bold mb-6">{t.contact.sendMessage}</h2>
-                
                 <div className="glass-card p-6">
                   {!isSubmitted ? (
                     <form onSubmit={handleSubmit} className="space-y-6">
@@ -166,7 +156,6 @@ export default function Contact() {
                             required 
                           />
                         </div>
-                        
                         <div className="space-y-2">
                           <Label htmlFor="email">{t.contact.email}</Label>
                           <Input 
@@ -180,7 +169,6 @@ export default function Contact() {
                           />
                         </div>
                       </div>
-                      
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="phone">{t.contact.phoneNumber}</Label>
@@ -192,7 +180,6 @@ export default function Contact() {
                             placeholder="+1 234 567 8900" 
                           />
                         </div>
-                        
                         <div className="space-y-2">
                           <Label htmlFor="subject">{t.contact.subject}</Label>
                           <Input 
@@ -205,7 +192,6 @@ export default function Contact() {
                           />
                         </div>
                       </div>
-                      
                       <div className="space-y-2">
                         <Label htmlFor="message">{t.contact.message}</Label>
                         <textarea 
@@ -218,7 +204,6 @@ export default function Contact() {
                           required 
                         />
                       </div>
-                      
                       <Button type="submit" className="w-full btn-primary">
                         <span className="mr-2 h-4 w-4" />
                         {t.contact.send}
@@ -240,58 +225,7 @@ export default function Contact() {
             </div>
           </div>
         </section>
-        
-        {/* FAQ Section */}
-        <section className="section bg-muted">
-          <div className="container">
-            <div className="max-w-3xl mx-auto text-center mb-12 animate-fade-in">
-              <h2 className="text-3xl font-bold mb-4">{t.contact.faq}</h2>
-              <p className="text-muted-foreground">
-                {t.contact.faqSubtitle}
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in [animation-delay:200ms]">
-              {[
-                {
-                  questionKey: "checkInOut",
-                  icon: <span />
-                },
-                {
-                  questionKey: "parking",
-                  icon: <span />
-                },
-                {
-                  questionKey: "pets",
-                  icon: <span />
-                },
-                {
-                  questionKey: "breakfast",
-                  icon: <span />
-                },
-                {
-                  questionKey: "transfers",
-                  icon: <span />
-                },
-                {
-                  questionKey: "amenities",
-                  icon: <span />
-                },
-              ].map((faq, index) => (
-                <div key={index} className="glass-card p-6">
-                  <h3 className="font-semibold text-lg mb-2">
-                    {t.contact.questions[faq.questionKey].question}
-                  </h3>
-                  <p className="text-muted-foreground">
-                    {t.contact.questions[faq.questionKey].answer}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
       </main>
-      
       <Footer />
     </div>
   );

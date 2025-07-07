@@ -12,10 +12,13 @@ import Contact from '@/pages/Contact';
 import Gallery from '@/pages/Gallery';
 import RateYourStay from '@/pages/RateYourStay'; // <-- Import RateYourStay
 import NotFound from '@/pages/NotFound';
+import OwnerLogin from '@/pages/OwnerLogin';
+import OwnerDashboard from '@/pages/OwnerDashboard';
+import OwnerRegister from '@/pages/OwnerRegister';
 
 const App = () => {
   return (
-    <ThemeProvider>
+    <ThemeProvider defaultTheme="light">
       <LanguageProvider>
         <BrowserRouter>
           <Routes>
@@ -27,6 +30,9 @@ const App = () => {
             <Route path="/contact" element={<Contact />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/rate-your-stay" element={<RateYourStay />} /> {/* <-- Add route for rating */}
+            <Route path="/owner-login" element={<OwnerLogin />} />
+            <Route path="/owner-dashboard" element={<OwnerDashboard />} />
+            <Route path="/owner-register" element={<OwnerRegister />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

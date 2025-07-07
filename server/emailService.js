@@ -129,5 +129,31 @@ const sendPostStayRatingRequest = async (bookingDetails) => {
     }
 }
 
+/**
+ * Sends an owner registration confirmation email.
+ * @param {string} email - The owner's email address.
+ * @param {string} token - The confirmation token.
+ */
+const sendOwnerConfirmationEmail = async (email, token) => {
+    const confirmUrl = `http://localhost:5001/api/owner/confirm/${token}`;
+    const mailOptions = {
+        from: 'SA Coastal Stays <no-reply@sacoastalstays.co.za>',
+        to: email,
+        subject: 'Confirm your owner account',
+        html: `
+            <h1>Confirm Your Account</h1>
+            <p>Thank you for registering as an owner. Please confirm your email by clicking the link below:</p>
+            <a href="${confirmUrl}">${confirmUrl}</a>
+            <p>If you did not register, you can ignore this email.</p>
+        `,
+    };
+    try {
+        let info = await transporter.sendMail(mailOptions);
+        console.log("Owner confirmation email sent: %s", info.messageId);
+        console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+    } catch (error) {
+        console.error("Error sending owner confirmation email:", error);
+    }
+};
 
-module.exports = { sendCustomerConfirmation, sendOwnerNotification, sendPostStayRatingRequest };
+module.exports = { sendCustomerConfirmation, sendOwnerNotification, sendPostStayRatingRequest, sendOwnerConfirmationEmail };

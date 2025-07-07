@@ -46,7 +46,7 @@ const galleryImages = [
   },
   {
     id: 7,
-    src: "https://images.unsplash.com/photo-1549921296-a0107b7b9c31?w=800&h=600&fit=crop",
+    src: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&h=600&fit=crop",
     alt: "South African breakfast served on a terrace overlooking the sea",
     category: "amenities"
   },
@@ -125,9 +125,8 @@ export default function Gallery() {
   }, [selectedImage, navigateGallery]);
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      
       <main className="flex-1 pt-20">
         {/* Header Section */}
         <section className="relative py-20 bg-gradient-to-r from-sea-light to-white dark:from-sea-dark dark:to-background overflow-hidden">
@@ -140,6 +139,11 @@ export default function Gallery() {
                 {t.gallery.subtitle}
               </p>
             </div>
+          </div>
+          {/* Decorative elements */}
+          <div className="absolute bottom-0 right-0 w-1/2 h-1/2 opacity-10 pointer-events-none">
+            <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full bg-primary/50 blur-3xl" />
+            <div className="absolute top-10 right-40 w-48 h-48 rounded-full bg-sea-light blur-3xl" />
           </div>
         </section>
         

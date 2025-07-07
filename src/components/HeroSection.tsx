@@ -3,10 +3,12 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function HeroSection() {
   const { t } = useLanguage();
   const [scrollY, setScrollY] = useState(0);
+  const isMobile = useIsMobile();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -63,14 +65,16 @@ export default function HeroSection() {
       </div>
       
       {/* Scroll down indicator */}
-      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 text-white animate-bounce">
-        <a 
-          href="#welcome" 
-          className="flex flex-col items-center opacity-70 hover:opacity-100 transition-opacity"
-        >
-          <span className="text-sm mb-2">{t.hero.scrollDown}</span>
-        </a>
-      </div>
+      {!isMobile && (
+        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 text-white animate-bounce">
+          <a 
+            href="#welcome" 
+            className="flex flex-col items-center opacity-70 hover:opacity-100 transition-opacity"
+          >
+            <span className="text-sm mb-2">{t.hero.scrollDown}</span>
+          </a>
+        </div>
+      )}
       
       {/* Animated wave */}
       <div className="absolute bottom-0 left-0 right-0 h-24 overflow-hidden">

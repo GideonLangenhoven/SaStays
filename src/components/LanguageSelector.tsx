@@ -16,7 +16,9 @@ type Language = {
 
 const languages: Language[] = [
   { code: "en", name: "English", flag: "🇬🇧" },
-  { code: "it", name: "Italiano", flag: "🇮🇹" },
+  { code: "af", name: "Afrikaans", flag: "🇿🇦" },
+  { code: "zu", name: "Zulu", flag: "🇿🇦" },
+  { code: "xh", name: "isiXhosa", flag: "🇿🇦" },
 ];
 
 export default function LanguageSelector() {
