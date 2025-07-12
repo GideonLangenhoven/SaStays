@@ -1,16 +1,24 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
+import { parseISO, format, differenceInDays } from 'date-fns';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ApartmentProps } from "@/components/ApartmentCard";
-import { getPropertyById } from "@/services/api";
+import { getPropertyById, getBookedDates } from "@/services/api";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import { Loader2, Calendar as CalendarIcon, Users } from "lucide-react";
+import { DateRange } from "react-day-picker";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { toast } from "sonner";
+import { supabase } from "@/supabaseClient"; // Import supabase directly
 
 interface Rating {
     id: number;
     rating: number;
-    review: string;
-    customer_name: string;
+    review_text: string; // Match schema
+    name: string; // This will be joined
     created_at: string;
 }
 
@@ -19,77 +27,156 @@ export default function ApartmentPage() {
     const { id } = useParams<{ id: string }>();
     const [apartment, setApartment] = useState<ApartmentProps | null>(null);
     const [ratings, setRatings] = useState<Rating[]>([]);
+    const [bookedDates, setBookedDates] = useState<Date[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [dateRange, setDateRange] = useState<DateRange | undefined>();
+    const [priceDetails, setPriceDetails] = useState<{ totalPrice: string; nights: number } | null>(null);
+    const [isPriceLoading, setIsPriceLoading] = useState(false);
 
     useEffect(() => {
         if (id) {
             const fetchApartmentDetails = async () => {
+                setLoading(true);
                 try {
-                    const propertyResponse = await getPropertyById(id);
-                    setApartment(propertyResponse.data);
-                    // Fetch ratings using fetch
-                    const ratingsRes = await fetch(`http://localhost:5001/api/properties/${id}/ratings`);
-                    if (ratingsRes.ok) {
-                        const ratingsData = await ratingsRes.json();
-                        setRatings(ratingsData);
-                    } else {
-                        setRatings([]);
-                    }
+                    const { data: propertyData, error: propertyError } = await supabase.from('properties').select('*').eq('id', id).single();
+                    if (propertyError) throw propertyError;
+                    setApartment(propertyData);
+
+                    const { data: bookedData, error: bookedError } = await getBookedDates(id);
+                    if (bookedError) throw bookedError;
+                    setBookedDates(bookedData.map((d: string) => parseISO(d)));
+                    
+                    const { data: ratingsData, error: ratingsError } = await supabase.from('reviews').select('*, profiles(full_name)').eq('property_id', id);
+                    if(ratingsError) throw ratingsError;
+                    setRatings(ratingsData.map(r => ({...r, name: r.profiles.full_name, review: r.review_text})));
+
                 } catch (error) {
                     console.error("Failed to fetch apartment details:", error);
+                    toast.error("Could not load property details.");
+                } finally {
+                    setLoading(false);
                 }
             };
             fetchApartmentDetails();
         }
     }, [id]);
 
-    if (!apartment) {
-        return <div>Loading...</div>;
+    useEffect(() => {
+        const calculatePrice = async () => {
+            if (dateRange?.from && dateRange?.to && id) {
+                setIsPriceLoading(true);
+                try {
+                    const response = await fetch(`http://localhost:5001/api/properties/${id}/calculate-price`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            start_date: format(dateRange.from, 'yyyy-MM-dd'),
+                            end_date: format(dateRange.to, 'yyyy-MM-dd'),
+                        }),
+                    });
+                    if (!response.ok) throw new Error('Price calculation failed');
+                    const data = await response.json();
+                    setPriceDetails(data);
+                } catch (error) {
+                    toast.error("Could not calculate price.");
+                } finally {
+                    setIsPriceLoading(false);
+                }
+            } else {
+                setPriceDetails(null);
+            }
+        };
+        calculatePrice();
+    }, [dateRange, id]);
+
+    if (loading) {
+        return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
     }
 
+    if (!apartment) {
+        return <div>Apartment not found.</div>;
+    }
+    
     return (
         <div className="min-h-screen flex flex-col">
             <Navbar />
             <main className="flex-1 pt-20">
                 <section className="container py-12">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div>
-                            <img src={apartment.image} alt={apartment.name} className="w-full h-auto rounded-lg shadow-lg" />
-                        </div>
-                        <div>
-                            <h1 className="text-4xl font-bold mb-4">{apartment.name}</h1>
-                            <p className="text-lg text-muted-foreground mb-4">{apartment.description}</p>
-                            <p className="text-2xl font-bold text-primary mb-4">R{apartment.price.toLocaleString('en-ZA')} / night</p>
-                            <div className="mb-4">
-                                <h3 className="text-xl font-semibold mb-2">Features</h3>
-                                <ul className="list-disc list-inside">
-                                    {apartment.features.map((feature, index) => (
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2">
+                             <img src={apartment.image_url} alt={apartment.title} className="w-full h-auto rounded-lg shadow-lg mb-8 aspect-video object-cover" />
+                             <h1 className="text-4xl font-bold mb-2">{apartment.title}</h1>
+                             <p className="text-lg text-muted-foreground mb-4">{apartment.location}</p>
+                             <p className="text-base mb-6">{apartment.description}</p>
+                             <div className="mb-4">
+                                <h3 className="text-xl font-semibold mb-2">Amenities</h3>
+                                <ul className="list-disc list-inside columns-2">
+                                    {apartment.amenities.map((feature, index) => (
                                         <li key={index}>{feature}</li>
                                     ))}
                                 </ul>
                             </div>
                         </div>
-                    </div>
-                    <div className="mt-12">
-                        <h2 className="text-3xl font-bold mb-4">Reviews</h2>
-                        {ratings.length > 0 ? (
-                            <div className="space-y-6">
-                                {ratings.map((rating) => (
-                                    <div key={rating.id} className="border p-4 rounded-lg">
-                                        <div className="flex items-center mb-2">
-                                            <div className="flex">
-                                                {[...Array(5)].map((_, i) => (
-                                                    <span key={i} className={`text-2xl ${i < rating.rating ? 'text-primary' : 'text-gray-300'}`}>★</span>
-                                                ))}
-                                            </div>
-                                            <p className="ml-4 font-semibold">{rating.customer_name}</p>
+                        <div className="lg:col-span-1">
+                            <div className="sticky top-24 border rounded-lg p-6 shadow-lg">
+                                <h2 className="text-2xl font-bold mb-4">Book Your Stay</h2>
+                                <div className="grid gap-2">
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn("w-full justify-start text-left font-normal", !dateRange && "text-muted-foreground")}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {dateRange?.from ? (
+                                                dateRange.to ? (
+                                                    <>
+                                                    {format(dateRange.from, "LLL dd, y")} -{" "}
+                                                    {format(dateRange.to, "LLL dd, y")}
+                                                    </>
+                                                ) : (
+                                                    format(dateRange.from, "LLL dd, y")
+                                                )
+                                                ) : (
+                                                <span>Pick a date range</span>
+                                            )}
+                                        </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="start">
+                                            <Calendar
+                                                mode="range"
+                                                defaultMonth={dateRange?.from}
+                                                selected={dateRange}
+                                                onSelect={setDateRange}
+                                                numberOfMonths={1}
+                                                disabled={[{ before: new Date() }, ...bookedDates]}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+
+                                {isPriceLoading && <div className="flex items-center justify-center h-20"><Loader2 className="h-6 w-6 animate-spin" /></div>}
+                                
+                                {priceDetails && !isPriceLoading && (
+                                    <div className="mt-4 space-y-2 text-sm">
+                                        <div className="flex justify-between">
+                                            <span>{priceDetails.nights} {priceDetails.nights > 1 ? 'nights' : 'night'}</span>
+                                            <span>R {priceDetails.totalPrice}</span>
                                         </div>
-                                        <p className="text-muted-foreground">{rating.review}</p>
+                                        <div className="flex justify-between font-bold text-base border-t pt-2 mt-2">
+                                            <span>Total</span>
+                                            <span>R {priceDetails.totalPrice}</span>
+                                        </div>
                                     </div>
-                                ))}
+                                )}
+
+                                <Button asChild className="w-full mt-6 btn-primary" disabled={!dateRange?.to}>
+                                    <Link to={`/booking?propertyId=${id}&from=${dateRange?.from?.toISOString()}&to=${dateRange?.to?.toISOString()}`}>
+                                        Reserve
+                                    </Link>
+                                </Button>
                             </div>
-                        ) : (
-                            <p>No reviews yet.</p>
-                        )}
+                        </div>
                     </div>
                 </section>
             </main>

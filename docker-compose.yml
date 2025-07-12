@@ -1,0 +1,30 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: coastal_booking
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: yourpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  server:
+    build: ./server
+    environment:
+      - PGUSER=postgres
+      - PGHOST=db
+      - PGDATABASE=coastal_booking
+      - PGPASSWORD=yourpassword
+      - PGPORT=5432
+      - JWT_SECRET=your_jwt_secret
+      # ...other env vars...
+    ports:
+      - "5001:5001"
+    depends_on:
+      - db
+
+volumes:
+  db_data:

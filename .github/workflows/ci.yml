@@ -1,0 +1,44 @@
+name: Node.js CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: coastal_booking
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: yourpassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGUSER: postgres
+      PGHOST: localhost
+      PGDATABASE: coastal_booking
+      PGPASSWORD: yourpassword
+      PGPORT: 5432
+      JWT_SECRET: testsecret
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./server
+      - name: Run tests
+        run: npm test
+        working-directory: ./server 

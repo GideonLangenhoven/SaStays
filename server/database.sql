@@ -3,14 +3,26 @@
 -- Drop existing tables in reverse order of creation to avoid dependency errors
 DROP TABLE IF EXISTS ratings;
 DROP TABLE IF EXISTS property_availability;
+DROP TABLE IF EXISTS transactions;
 DROP TABLE IF EXISTS bookings;
 DROP TABLE IF EXISTS customers;
 DROP TABLE IF EXISTS properties;
 DROP TABLE IF EXISTS owners;
 
+-- Create the 'owners' table for owner registration and email confirmation
+CREATE TABLE IF NOT EXISTS owners (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'active'
+    confirmation_token VARCHAR(255),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create the 'properties' table to store accommodation listings.
 CREATE TABLE properties (
     id SERIAL PRIMARY KEY,
+    owner_id INT REFERENCES owners(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     price_per_night DECIMAL(10, 2) NOT NULL,
@@ -63,13 +75,15 @@ CREATE TABLE ratings (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create the 'owners' table for owner registration and email confirmation
-CREATE TABLE IF NOT EXISTS owners (
+-- Create the 'transactions' table to log payment gateway notifications
+CREATE TABLE transactions (
     id SERIAL PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'active'
-    confirmation_token VARCHAR(255),
+    booking_id INT REFERENCES bookings(id),
+    payment_provider VARCHAR(50),
+    provider_transaction_id VARCHAR(255),
+    amount DECIMAL(10, 2),
+    status VARCHAR(50),
+    raw_response JSONB,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
