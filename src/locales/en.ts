@@ -39,7 +39,11 @@ export const en = {
   },
   testimonials: {
     title: "What Our Guests Say",
+<<<<<<< HEAD
     description: "Discover why our guests keep coming back to SaStays for their seaside getaways."
+=======
+    description: "Discover why our guests keep coming back to MareSereno for their seaside getaways."
+>>>>>>> d80d333ee78b1a3fc80fc5499d572305e963ad90
   },
   notFound: {
     title: "Page Not Found",
@@ -48,11 +52,19 @@ export const en = {
   },
   home: {
     welcome: {
+<<<<<<< HEAD
       subtitle: "Welcome to SaStays",
       title: "Luxury Seaside Accommodations",
       // Note: I noticed the description mentions the "Mediterranean coastline", 
       // while other parts of the text refer to South Africa. You may want to update this for consistency.
       description1: "Nestled on the pristine South African coastline, SaStays offers an exquisite collection of luxury apartments and hotel rooms. Our beachfront accommodations combine elegant design with modern comfort, creating the perfect setting for an unforgettable seaside getaway.",
+=======
+      subtitle: "Welcome to MareSereno",
+      title: "Luxury Seaside Accommodations",
+      // Note: I noticed the description mentions the "Mediterranean coastline", 
+      // while other parts of the text refer to South Africa. You may want to update this for consistency.
+      description1: "Nestled on the pristine South African coastline, MareSereno offers an exquisite collection of luxury apartments and hotel rooms. Our beachfront accommodations combine elegant design with modern comfort, creating the perfect setting for an unforgettable seaside getaway.",
+>>>>>>> d80d333ee78b1a3fc80fc5499d572305e963ad90
       description2: "Whether you're seeking a romantic escape, a family vacation, or a peaceful retreat, our diverse range of accommodations caters to every preference and need. Each space is thoughtfully designed to provide panoramic sea views and direct beach access.",
       learnMore: "Learn More"
     },
@@ -300,7 +312,11 @@ export const en = {
   amenitiesPage: {
     title: "Our Amenities",
     subtitle: "Discover the luxury amenities and services that make your stay unforgettable.",
+<<<<<<< HEAD
     description: "At SaStays, we are dedicated to providing a comprehensive and luxurious stay experience. From our beachfront services to wellness facilities, every detail has been curated to ensure maximum comfort and pleasure.",
+=======
+    description: "At MareSereno, we are dedicated to providing a comprehensive and luxurious stay experience. From our beachfront services to wellness facilities, every detail has been curated to ensure maximum comfort and pleasure.",
+>>>>>>> d80d333ee78b1a3fc80fc5499d572305e963ad90
     categories: {
       wellness: {
         title: "Wellness & Relaxation",

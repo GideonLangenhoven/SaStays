@@ -100,7 +100,11 @@ export default function Footer() {
         </div>
         
         <div className="border-t border-border pt-8 mt-8 text-center text-muted-foreground">
+<<<<<<< HEAD
           <p>&copy; {currentYear} SaStays. {t.footer.allRights}</p>
+=======
+          <p>&copy; {currentYear} MareSereno. {t.footer.allRights}</p>
+>>>>>>> d80d333ee78b1a3fc80fc5499d572305e963ad90
         </div>
       </div>
     </footer>
