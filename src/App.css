@@ -1,0 +1,153 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* Blog Card Custom Styles */
+@import url('https://fonts.googleapis.com/css?family=Abril+Fatface|Droid+Serif:400,700,400italic,700italic');
+
+.blog-card {
+  font-family: 'Droid Serif', serif;
+  color: #fff;
+  box-shadow: 0px 10px 20px -9px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  background-size: 100%;
+  position: relative;
+}
+.blog-card a {
+  color: #fff;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.blog-card .color-overlay {
+  background: rgba(64, 84, 94,0.5);
+  transition: background 0.3s cubic-bezier(0.33, 0.66, 0.66, 1);
+}
+.blog-card .gradient-overlay {
+  background-image: linear-gradient(transparent 0%, rgba(0, 0, 0, 0.6) 21%);
+}
+.blog-card .title-content {
+  font-family: 'Abril Fatface', serif;
+  transition: all 0.6s;
+}
+.blog-card h3, .blog-card h1 {
+  font-size: 1.9em;
+  font-weight: 400;
+  letter-spacing: 1px;
+  font-family: 'Abril Fatface', serif;
+  margin-bottom: 0;
+  display: inline-block;
+}
+.blog-card h3 a {
+  text-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s;
+}
+.blog-card h3 a:hover {
+  text-shadow: 0px 8px 20px rgba(0, 0, 0, 0.95);
+}
+.intro {
+  color: #ddd;
+  font-style: italic;
+  line-height: 18px;
+}
+.intro a {
+  color: #ddd;
+}
+.intro a:hover {
+  text-decoration: underline;
+}
+.card-info a {
+  background: #fff;
+  color: #444;
+  border-radius: 2px;
+  font-size: 0.8em;
+}
+.card-info a:hover {
+  background: #8e7c49;
+  color: #fff;
+}
+.utility-list {
+  list-style-type: none;
+  margin: 0 0 10px 20px;
+  padding: 0;
+  width: 100%;
+}
+.utility-list li {
+  margin: 0 5px 0 0;
+  padding: 3px 0 15px 0px;
+  display: inline-block;
+  font-size: 0.8em;
+}
+.licon {
+  position: relative;
+  width: 23px;
+  height: 15px;
+  display: inline-block;
+  vertical-align: middle;
+}
+.licon:before {
+  content: "";
+  background: url('https://rawcdn.githack.com/Nodws/NodPen/ffad95aa5244b4b09a3c7c1508a018959bbedb7e/postItem/licons.svg') -2px -6px no-repeat;
+  background-size: 250px;
+  width: 26px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
+  position: absolute;
+  top: -3px;
+  left: 0;
+}
+.icon-black {
+  filter: brightness(0);
+  opacity: 0.6;
+}
+.icon-like:before {
+  background-position: -183px -6px;
+}
+.icon-com:before {
+  background-position: -63px -4px;
+}
+.icon-dat:before {
+  background-position: -94px -7px;
+}
+.icon-tag:before {
+  background-position: -33px -6px;
+}
