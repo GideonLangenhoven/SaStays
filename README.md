@@ -2,6 +2,41 @@
 
 A comprehensive, production-ready platform for property owners to manage accommodation listings, bookings, payments, and guest interactions with real-time synchronization.
 
+## 📈 Project Progress (as of July 2025)
+
+This project is under active development and implements the majority of the core features described in the Product Functional Description (PFD) v2.0. Below is a summary of what is complete and what remains:
+
+### ✅ Completed
+
+- Core booking system with real-time calendar sync and double-booking prevention
+- Basic listing management (create, edit, amenities, house rules, guest requirements)
+- Owner dashboard with performance metrics and earnings tracking
+- Multi-platform payment integration (Ozow, PayFast, Zapper, SnapScan)
+- Guest communication (unified inbox)
+- Automated post-stay review requests (email)
+- Payout management for owners
+- Security, CI/CD, monitoring, and multi-language support
+
+### 🟡 In Progress / Partially Complete
+
+- Custom pricing for specific dates and discounts (weekly/monthly)
+- Additional fees (cleaning, extra guests, pets)
+- Owner and guest notification system (email/SMS)
+- Guest review and rating workflow
+- Performance dashboard and analytics
+
+### ⏳ Still To Be Done
+
+- Advanced listing management: co-hosting, multi-property management
+- Multi-calendar view for hosts with multiple listings
+- External calendar synchronization (e.g., Google Calendar)
+- Saved replies, scheduled messages, and photo/video messaging in guest communication
+- Full end-to-end testing of all payment providers and QR code flows
+- Detailed POPIA compliance audit and documentation
+- Advanced analytics, AI-powered pricing, and virtual tours (future roadmap)
+- Mobile app (future roadmap)
+- Blockchain, IoT, and multi-currency support (future roadmap)
+
 ## 🚀 Features
 
 ### Core Functionality
