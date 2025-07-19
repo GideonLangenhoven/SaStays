@@ -11,20 +11,86 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
   server:
     build: ./server
     environment:
+      # Database
       - PGUSER=postgres
       - PGHOST=db
       - PGDATABASE=coastal_booking
       - PGPASSWORD=yourpassword
       - PGPORT=5432
-      - JWT_SECRET=your_jwt_secret
-      # ...other env vars...
+      - DATABASE_URL=postgresql://postgres:yourpassword@db:5432/coastal_booking
+
+      # Redis
+      - REDIS_URL=redis://redis:6379
+
+      # Security
+      - JWT_SECRET=your_super_secure_jwt_secret_at_least_32_characters_long
+      - ENCRYPTION_KEY=your_encryption_key_for_sensitive_data
+
+      # Application Settings
+      - NODE_ENV=production
+      - VITE_APP_URL=https://yourdomain.com
+      - VITE_API_URL=https://api.yourdomain.com
+
+      # Payment Gateways (test values)
+      - PAYFAST_SANDBOX=true
+      - OZOW_SANDBOX=true
+      - PAYFAST_MERCHANT_ID=your_payfast_merchant_id
+      - PAYFAST_MERCHANT_KEY=your_payfast_merchant_key
+      - PAYFAST_PASSPHRASE=your_payfast_passphrase
+      - OZOW_SITE_CODE=your_ozow_site_code
+      - OZOW_PRIVATE_KEY=your_ozow_private_key
+      - OZOW_API_KEY=your_ozow_api_key
+      - ZAPPER_MERCHANT_ID=your_zapper_merchant_id
+      - ZAPPER_API_KEY=your_zapper_api_key
+      - SNAPSCAN_SNAPCODE_ID=your_snapscan_id
+      - SNAPSCAN_API_KEY=your_snapscan_api_key
+
+      # Communication Services (test values)
+      - TWILIO_ACCOUNT_SID=your_twilio_account_sid
+      - TWILIO_AUTH_TOKEN=your_twilio_auth_token
+      - TWILIO_PHONE_NUMBER=your_twilio_phone_number
+      - SENDGRID_API_KEY=your_sendgrid_api_key
+      - SENDGRID_FROM_EMAIL=noreply@yourdomain.com
+      - SENDGRID_FROM_NAME=Your Property Management
+
+      # File Storage
+      - CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+      - CLOUDINARY_API_KEY=your_cloudinary_api_key
+      - CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+
+      # Maps & Geocoding
+      - GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+
+      # Monitoring & Logging
+      - SENTRY_DSN=your_sentry_dsn
+      - LOG_LEVEL=info
+
+      # Rate Limiting
+      - RATE_LIMIT_REQUESTS_PER_MINUTE=100
+
+      # Calendar Sync
+      - GOOGLE_CALENDAR_CLIENT_ID=your_google_client_id
+      - GOOGLE_CALENDAR_CLIENT_SECRET=your_google_client_secret
+
+      # Backup Configuration
+      - BACKUP_SCHEDULE=0 2 * * *
+      - BACKUP_RETENTION_DAYS=30
     ports:
       - "5001:5001"
     depends_on:
       - db
+      - redis
 
 volumes:
   db_data:
+  redis_data:

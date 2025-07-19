@@ -10,7 +10,7 @@ export const en = {
   hero: {
     subtitle: "SOUTH AFRICAN COASTAL ESCAPES",
     title: "Discover the Magic of the SA Shoreline",
-    description: "Relax, unwind, and soak up the sun at our handpicked coastal retreats. From Cape Town’s golden sands to the warm Indian Ocean in Durban, experience true South African hospitality by the sea.",
+    description: "Relax, unwind, and soak up the sun at our handpicked coastal retreats. From Cape Town's golden sands to the warm Indian Ocean in Durban, experience true South African hospitality by the sea.",
     bookStay: "Book Your Stay",
     exploreApartments: "Explore Apartments",
     scrollDown: "Scroll Down"
@@ -39,32 +39,20 @@ export const en = {
   },
   testimonials: {
     title: "What Our Guests Say",
-<<<<<<< HEAD
     description: "Discover why our guests keep coming back to SaStays for their seaside getaways."
-=======
-    description: "Discover why our guests keep coming back to MareSereno for their seaside getaways."
->>>>>>> d80d333ee78b1a3fc80fc5499d572305e963ad90
   },
   notFound: {
     title: "Page Not Found",
-    description: "Oops! You’ve drifted off the South African coast. Let’s guide you back to the beach.",
+    description: "Oops! You've drifted off the South African coast. Let's guide you back to the beach.",
     returnHome: "Back to the Coast"
   },
   home: {
     welcome: {
-<<<<<<< HEAD
       subtitle: "Welcome to SaStays",
       title: "Luxury Seaside Accommodations",
       // Note: I noticed the description mentions the "Mediterranean coastline", 
       // while other parts of the text refer to South Africa. You may want to update this for consistency.
       description1: "Nestled on the pristine South African coastline, SaStays offers an exquisite collection of luxury apartments and hotel rooms. Our beachfront accommodations combine elegant design with modern comfort, creating the perfect setting for an unforgettable seaside getaway.",
-=======
-      subtitle: "Welcome to MareSereno",
-      title: "Luxury Seaside Accommodations",
-      // Note: I noticed the description mentions the "Mediterranean coastline", 
-      // while other parts of the text refer to South Africa. You may want to update this for consistency.
-      description1: "Nestled on the pristine South African coastline, MareSereno offers an exquisite collection of luxury apartments and hotel rooms. Our beachfront accommodations combine elegant design with modern comfort, creating the perfect setting for an unforgettable seaside getaway.",
->>>>>>> d80d333ee78b1a3fc80fc5499d572305e963ad90
       description2: "Whether you're seeking a romantic escape, a family vacation, or a peaceful retreat, our diverse range of accommodations caters to every preference and need. Each space is thoughtfully designed to provide panoramic sea views and direct beach access.",
       learnMore: "Learn More"
     },
@@ -248,40 +236,13 @@ export const en = {
     sendMessage: "Send Us a Message",
     fullName: "Full Name",
     phoneNumber: "Phone Number",
+    emailAddress: "Email Address",
     subject: "Subject",
     message: "Message",
-    howCanWeHelp: "How can we help you?",
+    messagePlaceholder: "Tell us about your inquiry or special requests...",
     send: "Send Message",
-    messageSent: "Message Sent!",
-    thankYou: "Thank you for reaching out. We'll respond to your message as soon as possible.",
-    faq: "Frequently Asked Questions",
-    faqSubtitle: "Find quick answers to commonly asked questions about our accommodations and services.",
-    questions: {
-      checkInOut: {
-        question: "What are your check-in and check-out times?",
-        answer: "Check-in is from 3:00 PM onwards, and check-out is until 11:00 AM. Early check-in or late check-out may be arranged based on availability."
-      },
-      parking: {
-        question: "Is parking available at the property?",
-        answer: "Yes, we offer complimentary parking for all guests. Valet parking service is also available for an additional fee."
-      },
-      pets: {
-        question: "Are pets allowed in the apartments?",
-        answer: "We welcome pets in designated pet-friendly apartments. Please inform us in advance if you plan to bring a pet, as additional charges may apply."
-      },
-      breakfast: {
-        question: "Is breakfast included in the room rate?",
-        answer: "Breakfast is included in select room packages. You can check the inclusion during the booking process or add it to your reservation at any time."
-      },
-      transfers: {
-        question: "Do you offer airport transfers?",
-        answer: "Yes, we offer airport transfers for an additional fee. Please contact our concierge at least 48 hours before your arrival to arrange transportation."
-      },
-      amenities: {
-        question: "What amenities are available at the property?",
-        answer: "Our property features swimming pools, a spa, restaurants, a beach bar, fitness center, and direct beach access. All apartments include Wi-Fi, air conditioning, and modern appliances."
-      }
-    }
+    success: "Message sent successfully!",
+    error: "Failed to send message. Please try again."
   },
   apartmentDescriptions: {
     "1": {
@@ -312,11 +273,7 @@ export const en = {
   amenitiesPage: {
     title: "Our Amenities",
     subtitle: "Discover the luxury amenities and services that make your stay unforgettable.",
-<<<<<<< HEAD
     description: "At SaStays, we are dedicated to providing a comprehensive and luxurious stay experience. From our beachfront services to wellness facilities, every detail has been curated to ensure maximum comfort and pleasure.",
-=======
-    description: "At MareSereno, we are dedicated to providing a comprehensive and luxurious stay experience. From our beachfront services to wellness facilities, every detail has been curated to ensure maximum comfort and pleasure.",
->>>>>>> d80d333ee78b1a3fc80fc5499d572305e963ad90
     categories: {
       wellness: {
         title: "Wellness & Relaxation",
