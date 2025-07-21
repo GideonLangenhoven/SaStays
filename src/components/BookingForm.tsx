@@ -15,7 +15,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Mock data for the booking
+// NOTE: The following mockBookingData is for development/testing only.
+// Replace with API integration for production use.
 const mockBookingData = {
   property: {
     id: 1,

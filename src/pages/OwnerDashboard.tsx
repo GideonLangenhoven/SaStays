@@ -91,83 +91,31 @@ export default function OwnerDashboard() {
           </TabsContent>
 
           <TabsContent value="bookings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Bookings Management</CardTitle>
-                <CardDescription>
-                  View and manage all your property bookings
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <Calendar className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">Bookings Management</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    This feature is coming soon. You'll be able to manage all your bookings here.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+              <span className="text-lg font-semibold">Bookings management coming soon.</span>
+              <span className="text-sm">You’ll be able to manage all your bookings here.</span>
+            </div>
           </TabsContent>
 
           <TabsContent value="messages" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Guest Messages</CardTitle>
-                <CardDescription>
-                  Communicate with your guests and manage inquiries
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <MessageSquare className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">Messaging System</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    This feature is coming soon. You'll be able to message guests here.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+              <span className="text-lg font-semibold">Guest messaging coming soon.</span>
+              <span className="text-sm">You’ll be able to message guests here.</span>
+            </div>
           </TabsContent>
 
           <TabsContent value="properties" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Property Management</CardTitle>
-                <CardDescription>
-                  Manage your property listings and settings
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <Eye className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">Property Management</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    This feature is coming soon. You'll be able to manage properties here.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+              <span className="text-lg font-semibold">Property management coming soon.</span>
+              <span className="text-sm">You’ll be able to manage properties here.</span>
+            </div>
           </TabsContent>
 
           <TabsContent value="guests" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Guest Management</CardTitle>
-                <CardDescription>
-                  View guest profiles and booking history
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <Users className="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">Guest Management</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    This feature is coming soon. You'll be able to manage guests here.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+              <span className="text-lg font-semibold">Guest management coming soon.</span>
+              <span className="text-sm">You’ll be able to manage guests here.</span>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

@@ -1,3 +1,4 @@
+// server/routes.js
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
@@ -113,6 +114,43 @@ router.delete('/properties/:id', auth, async (req, res) => {
 });
 
 
+// --- Co-hosting ---
+router.post('/properties/:id/co-hosts', auth, async (req, res) => {
+    const { id } = req.params;
+    const { coHostEmail, permissions } = req.body;
+    const owner_id = req.owner.id;
+
+    try {
+        // Find the co-host by email
+        const coHost = await pool.query('SELECT id FROM owners WHERE email = $1', [coHostEmail]);
+        if (coHost.rows.length === 0) {
+            return res.status(404).json({ msg: 'Co-host not found' });
+        }
+        const coHostId = coHost.rows[0].id;
+
+        // Add the co-host to the property
+        const newCoHost = await pool.query(
+            'INSERT INTO co_hosts (property_id, owner_id, co_host_id, permissions) VALUES ($1, $2, $3, $4) RETURNING *',
+            [id, owner_id, coHostId, permissions]
+        );
+        res.json(newCoHost.rows[0]);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+});
+
+// --- External Calendar Sync ---
+router.post('/properties/:id/sync-calendar', auth, async (req, res) => {
+    const { id } = req.params;
+    const { externalCalendarUrl } = req.body;
+
+    // In a real application, you would parse the iCal file from the URL and update your calendar
+    console.log(`Syncing calendar for property ${id} with URL: ${externalCalendarUrl}`);
+
+    res.json({ msg: 'Calendar sync initiated' });
+});
+
 // --- Booking Management ---
 
 // Create a booking (instant or pending approval)
@@ -143,23 +181,6 @@ router.post('/bookings', async (req, res) => {
             [property_id, customer_id, start_date, end_date, total_price, status, payment_provider]
         );
 
-        // Block out dates in property_availability
-        const days = [];
-        let d = new Date(start_date);
-        const end = new Date(end_date);
-        while (d < end) {
-            days.push(new Date(d));
-            d.setDate(d.getDate() + 1);
-        }
-        for (const day of days) {
-            await pool.query(
-                `INSERT INTO property_availability (property_id, date, is_available, booking_id)
-                 VALUES ($1, $2, false, $3)
-                 ON CONFLICT (property_id, date) DO UPDATE SET is_available = false, booking_id = $3`,
-                [property_id, day.toISOString().slice(0, 10), newBooking.rows[0].id]
-            );
-        }
-
         res.json(newBooking.rows[0]);
     } catch (err) {
         console.error(err.message);
@@ -172,85 +193,33 @@ router.get('/properties/:id/booked-dates', async (req, res) => {
     const { id } = req.params;
     try {
         const result = await pool.query(
-            `SELECT date FROM property_availability WHERE property_id = $1 AND is_available = false`,
+            `SELECT start_date, end_date FROM bookings WHERE property_id = $1 AND status = 'confirmed'`,
             [id]
         );
-        res.json(result.rows.map(r => r.date));
+        const bookedDates = [];
+        result.rows.forEach(row => {
+            const dates = eachDayOfInterval({ start: parseISO(row.start_date), end: parseISO(row.end_date) });
+            dates.forEach(date => bookedDates.push(format(date, 'yyyy-MM-dd')));
+        });
+        res.json(bookedDates);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');
     }
-});
-
-
-// --- Other routes from previous steps ---
-// ... (The rest of the routes.js code remains the same as provided in the previous turn)
-
-// Payment Webhook (generic for all providers)
-router.post('/webhook/payment', async (req, res) => {
-    // You will need to parse and verify the payload according to each provider's docs
-    const { provider, booking_id, payment_status, provider_transaction_id, amount, raw_response } = req.body;
-
-    try {
-        if (payment_status === 'SUCCESS') {
-            // Update booking status
-            await pool.query(
-                'UPDATE bookings SET status = $1 WHERE id = $2',
-                ['confirmed', booking_id]
-            );
-            // Log transaction
-            await pool.query(
-                `INSERT INTO transactions (booking_id, payment_provider, provider_transaction_id, amount, status, raw_response)
-                 VALUES ($1, $2, $3, $4, $5, $6)`,
-                [booking_id, provider, provider_transaction_id, amount, 'success', raw_response]
-            );
-            // (Optional) Send notifications here
-        }
-        res.status(200).json({ ok: true });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
-    }
-});
-
-router.post('/webhook/ozow', async (req, res) => {
-  const { Reference, Status, TransactionId, Amount } = req.body;
-  try {
-    if (Status === 'Complete') {
-      // Find booking by Reference
-      const bookingRes = await pool.query('SELECT * FROM bookings WHERE id = $1', [Reference]);
-      if (bookingRes.rows.length === 0) return res.status(404).send('Booking not found');
-      // Update booking status
-      await pool.query('UPDATE bookings SET status = $1 WHERE id = $2', ['confirmed', Reference]);
-      // Log transaction
-      await pool.query(
-        `INSERT INTO transactions (booking_id, payment_provider, provider_transaction_id, amount, status, raw_response)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [Reference, 'ozow', TransactionId, Amount, 'success', JSON.stringify(req.body)]
-      );
-      // Notify owner (email + SMS)
-      const property = await pool.query('SELECT * FROM properties WHERE id = $1', [bookingRes.rows[0].property_id]);
-      const owner = await pool.query('SELECT * FROM owners WHERE id = $1', [property.rows[0].owner_id]);
-      await sendOwnerNotification(owner.rows[0].email, bookingRes.rows[0]);
-      await sendOwnerSMS(owner.rows[0].phone, `New booking confirmed for property: ${property.rows[0].name}`);
-    }
-    res.status(200).send('OK');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
 });
 
 // --- Guest Messaging ---
-router.post('/messages', async (req, res) => {
-  const { booking_id, sender_id, message } = req.body;
+router.post('/messages', auth, async (req, res) => {
+  const { booking_id, message } = req.body;
+  const sender_id = req.owner.id;
   const result = await pool.query(
-    'INSERT INTO messages (booking_id, sender_id, message) VALUES ($1, $2, $3) RETURNING *',
-    [booking_id, sender_id, message]
+    'INSERT INTO messages (booking_id, sender_id, message, sender_type) VALUES ($1, $2, $3, $4) RETURNING *',
+    [booking_id, sender_id, message, 'owner']
   );
   res.json(result.rows[0]);
 });
-router.get('/messages/:booking_id', async (req, res) => {
+
+router.get('/messages/:booking_id', auth, async (req, res) => {
   const { booking_id } = req.params;
   const result = await pool.query(
     'SELECT * FROM messages WHERE booking_id = $1 ORDER BY created_at ASC',
@@ -259,77 +228,5 @@ router.get('/messages/:booking_id', async (req, res) => {
   res.json(result.rows);
 });
 
-// Get dashboard stats for an owner
-router.get('/owner/:ownerId/dashboard', async (req, res) => {
-  const { ownerId } = req.params;
-  try {
-    // Total bookings
-    const bookings = await pool.query(
-      `SELECT * FROM bookings WHERE property_id IN (SELECT id FROM properties WHERE owner_id = $1)`, [ownerId]
-    );
-    // Occupancy rate (booked nights / total nights in range)
-    const occupancy = await pool.query(
-      `SELECT COUNT(*) AS booked_nights FROM property_availability WHERE property_id IN (SELECT id FROM properties WHERE owner_id = $1) AND is_available = false`, [ownerId]
-    );
-    // Earnings
-    const earnings = await pool.query(
-      `SELECT SUM(amount) AS total_earnings FROM transactions WHERE booking_id IN (SELECT id FROM bookings WHERE property_id IN (SELECT id FROM properties WHERE owner_id = $1)) AND status = 'success'`, [ownerId]
-    );
-    // Reviews
-    const reviews = await pool.query(
-      `SELECT * FROM reviews WHERE property_id IN (SELECT id FROM properties WHERE owner_id = $1)`, [ownerId]
-    );
-    // Transactions
-    const transactions = await pool.query(
-      `SELECT * FROM transactions WHERE booking_id IN (SELECT id FROM bookings WHERE property_id IN (SELECT id FROM properties WHERE owner_id = $1))`, [ownerId]
-    );
-    res.json({
-      bookings: bookings.rows,
-      occupancy: occupancy.rows[0].booked_nights,
-      earnings: earnings.rows[0].total_earnings,
-      reviews: reviews.rows,
-      transactions: transactions.rows
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
-});
-
-router.post('/reviews', async (req, res) => {
-  const { booking_id, property_id, rating, review } = req.body;
-  await pool.query(
-    'INSERT INTO reviews (booking_id, property_id, rating, review) VALUES ($1, $2, $3, $4)',
-    [booking_id, property_id, rating, review]
-  );
-  res.json({ ok: true });
-});
-
-// Add or update payout method
-router.post('/payout-method', async (req, res) => {
-  const { owner_id, bank_name, account_number, account_type, branch_code } = req.body;
-  // Upsert logic: if exists, update; else, insert
-  const existing = await pool.query('SELECT * FROM payout_methods WHERE owner_id = $1', [owner_id]);
-  let result;
-  if (existing.rows.length > 0) {
-    result = await pool.query(
-      `UPDATE payout_methods SET bank_name=$1, account_number=$2, account_type=$3, branch_code=$4 WHERE owner_id=$5 RETURNING *`,
-      [bank_name, account_number, account_type, branch_code, owner_id]
-    );
-  } else {
-    result = await pool.query(
-      `INSERT INTO payout_methods (owner_id, bank_name, account_number, account_type, branch_code) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [owner_id, bank_name, account_number, account_type, branch_code]
-    );
-  }
-  res.json(result.rows[0]);
-});
-
-// Get payout method for owner
-router.get('/payout-method/:owner_id', async (req, res) => {
-  const { owner_id } = req.params;
-  const result = await pool.query('SELECT * FROM payout_methods WHERE owner_id = $1', [owner_id]);
-  res.json(result.rows[0]);
-});
 
 module.exports = router;

@@ -1,5 +1,5 @@
 // src/components/communication/GuestInbox.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,18 +10,19 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { format, formatDistanceToNow } from 'date-fns';
-import { 
-  MessageCircle, 
-  Send, 
-  Search, 
-  Clock, 
-  CheckCheck, 
+import {
+  MessageCircle,
+  Send,
+  Search,
+  Clock,
+  CheckCheck,
   Star,
   Image as ImageIcon,
   Calendar,
   User,
   Phone,
-  Mail
+  Mail,
+  Bookmark
 } from 'lucide-react';
 
 interface Message {
@@ -96,7 +97,7 @@ export const GuestInbox: React.FC = () => {
     };
 
     fetchConversations();
-    
+
     // Set up real-time updates
     const interval = setInterval(fetchConversations, 10000);
     return () => clearInterval(interval);
@@ -113,7 +114,7 @@ export const GuestInbox: React.FC = () => {
             ...msg,
             timestamp: new Date(msg.timestamp)
           })));
-          
+
           // Mark as read
           await fetch(`/api/conversations/${selectedConversation.id}/read`, {
             method: 'POST'
@@ -169,7 +170,7 @@ export const GuestInbox: React.FC = () => {
           timestamp: new Date(message.timestamp)
         }]);
         setNewMessage('');
-        
+
         toast({
           title: "Message sent",
           description: "Your message has been delivered to the guest"
@@ -199,7 +200,7 @@ export const GuestInbox: React.FC = () => {
   const formatMessageTime = (timestamp: Date) => {
     const now = new Date();
     const diffInHours = (now.getTime() - timestamp.getTime()) / (1000 * 60 * 60);
-    
+
     if (diffInHours < 24) {
       return format(timestamp, 'HH:mm');
     } else if (diffInHours < 48) {
@@ -245,7 +246,7 @@ export const GuestInbox: React.FC = () => {
                     {conversation.guestName.split(' ').map(n => n[0]).join('').toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
                     <h3 className="font-medium text-sm truncate">
@@ -267,17 +268,17 @@ export const GuestInbox: React.FC = () => {
                       )}
                     </div>
                   </div>
-                  
+
                   <p className="text-xs text-gray-600 mb-1 truncate">
                     {conversation.propertyTitle}
                   </p>
-                  
+
                   {conversation.checkIn && conversation.checkOut && (
                     <p className="text-xs text-gray-500 mb-1">
                       {format(conversation.checkIn, 'MMM d')} - {format(conversation.checkOut, 'MMM d')}
                     </p>
                   )}
-                  
+
                   <div className="flex items-center justify-between">
                     <p className="text-xs text-gray-600 truncate flex-1 mr-2">
                       {conversation.lastMessage.content}
@@ -312,7 +313,7 @@ export const GuestInbox: React.FC = () => {
                     <p className="text-sm text-gray-600">{selectedConversation.propertyTitle}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-4 text-sm text-gray-600">
                   {selectedConversation.guestEmail && (
                     <div className="flex items-center gap-1">
@@ -356,8 +357,8 @@ export const GuestInbox: React.FC = () => {
                     className={`flex ${message.senderType === 'owner' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div className={`max-w-[70%] ${
-                      message.senderType === 'owner' 
-                        ? 'bg-primary text-primary-foreground' 
+                      message.senderType === 'owner'
+                        ? 'bg-primary text-primary-foreground'
                         : 'bg-gray-100'
                     } rounded-lg p-3`}>
                       {message.messageType === 'system' ? (
@@ -372,9 +373,9 @@ export const GuestInbox: React.FC = () => {
                               {message.attachments.map((attachment, index) => (
                                 <div key={index} className="flex items-center gap-2">
                                   <ImageIcon className="h-4 w-4" />
-                                  <a 
-                                    href={attachment} 
-                                    target="_blank" 
+                                  <a
+                                    href={attachment}
+                                    target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-sm underline"
                                   >
@@ -429,7 +430,8 @@ export const GuestInbox: React.FC = () => {
                   size="sm"
                   onClick={() => setShowSavedReplies(!showSavedReplies)}
                 >
-                  Templates
+                  <Bookmark className="h-4 w-4 mr-2" />
+                  Saved Replies
                 </Button>
                 <div className="flex-1 flex gap-2">
                   <Textarea
@@ -445,8 +447,8 @@ export const GuestInbox: React.FC = () => {
                     className="resize-none"
                     rows={2}
                   />
-                  <Button 
-                    onClick={sendMessage} 
+                  <Button
+                    onClick={sendMessage}
                     disabled={!newMessage.trim() || loading}
                     size="sm"
                   >

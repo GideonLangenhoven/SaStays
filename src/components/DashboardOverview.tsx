@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CalendarDays, DollarSign, Users, TrendingUp, Eye, Star, MessageSquare, Clock } from 'lucide-react';
 
-// Mock data - will be replaced with real data from API
+// NOTE: The following dashboardData is mock data for development/testing only.
+// Replace with API integration for production use.
 const dashboardData = {
   totalEarnings: 45250.00,
   monthlyEarnings: 8750.00,

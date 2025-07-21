@@ -1,3 +1,4 @@
+// src/pages/PropertyCreateEdit.tsx
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -197,10 +198,10 @@ export default function PropertyCreateEdit() {
               <Input name="capacity" type="number" min="1" value={form.capacity} onChange={handleChange} required />
             </div>
           </div>
-          <div>
-            <label className="block font-semibold mb-1">Location</label>
-            <Input name="location" value={form.location} onChange={handleChange} required />
-            <div className="text-xs text-muted-foreground mt-1">(Map picker coming soon)</div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Location Map</label>
+            <input type="text" className="w-full border rounded px-3 py-2 bg-gray-100 text-gray-400" value="Map picker coming soon" disabled />
+            {/* TODO: Integrate interactive map picker in future */}
           </div>
           <div>
             <label className="block font-semibold mb-1">Amenities</label>
@@ -253,4 +254,4 @@ export default function PropertyCreateEdit() {
       <Footer />
     </div>
   );
-} 
+}

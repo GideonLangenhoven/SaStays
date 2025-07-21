@@ -112,4 +112,5 @@ export const xh = {
     description: "Inkcazo yoqhagamshelwano"
   },
   // TODO: Translate the rest of the keys to isiXhosa
+  // Fallback: If a translation is missing, use English or a placeholder.
 }; 

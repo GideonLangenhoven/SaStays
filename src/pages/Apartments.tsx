@@ -1,3 +1,4 @@
+// src/pages/Apartments.tsx
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -11,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/supabaseClient"; // Import Supabase client
 import { Loader2 } from "lucide-react";
@@ -25,7 +27,7 @@ export default function Apartments() {
   const [capacityFilter, setCapacityFilter] = useState<string>("all");
   const [locationFilter, setLocationFilter] = useState<string>("all");
   const [priceRange, setPriceRange] = useState<number[]>([0, 25000]);
-  
+
   // Fetch all active properties on component mount
   useEffect(() => {
     const fetchProperties = async () => {
@@ -46,41 +48,41 @@ export default function Apartments() {
 
     fetchProperties();
   }, []);
-  
+
   // Apply filters whenever a filter state changes
   useEffect(() => {
     let result = allApartments;
-    
+
     // Filter by capacity
     if (capacityFilter !== "all") {
       const capacity = parseInt(capacityFilter);
       result = result.filter(apt => apt.capacity >= capacity);
     }
-    
+
     // Filter by location
     if (locationFilter !== "all") {
       result = result.filter(apt => apt.location === locationFilter);
     }
-    
+
     // Filter by price range
     result = result.filter(apt => apt.price_per_night >= priceRange[0] && apt.price_per_night <= priceRange[1]);
-    
+
     setFilteredApartments(result);
   }, [capacityFilter, locationFilter, priceRange, allApartments]);
-  
+
   // Get unique locations for the filter dropdown
-  const locations = ["all", ...new Set(allApartments.map(apt => apt.location))];
+  const locations = ["all", ...Array.from(new Set(allApartments.map(apt => apt.location)))];
 
   const resetFilters = () => {
     setCapacityFilter("all");
     setLocationFilter("all");
     setPriceRange([0, 25000]);
   };
-  
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
+
       <main className="flex-1 pt-20">
         <section className="relative py-20 bg-gradient-to-r from-sea-light to-white dark:from-sea-dark dark:to-background overflow-hidden">
           <div className="container relative z-10 text-center">
@@ -92,7 +94,7 @@ export default function Apartments() {
             </p>
           </div>
         </section>
-        
+
         <section className="py-8 border-b sticky top-[68px] bg-background/95 backdrop-blur-sm z-30">
           <div className="container">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
@@ -109,7 +111,7 @@ export default function Apartments() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div>
                 <Label className="block text-sm font-medium mb-2">{t.apartments.filters.location}</Label>
                 <Select value={locationFilter} onValueChange={setLocationFilter}>
@@ -122,7 +124,7 @@ export default function Apartments() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div>
                 <Label className="block text-sm font-medium mb-2">
                   {t.apartments.filters.priceRange}: R{priceRange[0]} - R{priceRange[1]}
@@ -136,7 +138,7 @@ export default function Apartments() {
                 />
               </div>
             </div>
-            
+
             <div className="flex justify-between items-center mt-4">
               <p className="text-sm text-muted-foreground">
                 {t.apartments.filters.showing} {filteredApartments.length} {t.apartments.filters.of} {allApartments.length} {t.apartments.filters.accommodations}
@@ -147,7 +149,7 @@ export default function Apartments() {
             </div>
           </div>
         </section>
-        
+
         <section className="py-12 bg-muted/40">
           <div className="container">
             {loading ? (
@@ -169,7 +171,7 @@ export default function Apartments() {
           </div>
         </section>
       </main>
-      
+
       <Footer />
     </div>
   );

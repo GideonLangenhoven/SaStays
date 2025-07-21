@@ -112,4 +112,5 @@ export const zu = {
     description: "Incazelo yokuxhumana"
   },
   // TODO: Translate the rest of the keys to Zulu
+  // Fallback: If a translation is missing, use English or a placeholder.
 }; 
