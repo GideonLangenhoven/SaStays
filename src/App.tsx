@@ -11,6 +11,7 @@ import { PropertyListPage } from './pages/PropertyListPage';
 import { PropertyDetailPage } from './pages/PropertyDetailPage';
 import { BookingPage } from './pages/BookingPage';
 import { PaymentPage } from './pages/PaymentPage';
+import BookingConfirmationPage from './pages/BookingConfirmation'; // Import the new page
 import { OwnerDashboard } from './pages/owner/Dashboard';
 import { OwnerProperties } from './pages/owner/Properties';
 import { OwnerBookings } from './pages/owner/Bookings';
@@ -45,6 +46,7 @@ function App() {
                 <Route path="/properties/:id" element={<PropertyDetailPage />} />
                 <Route path="/book/:id" element={<BookingPage />} />
                 <Route path="/payment/:bookingId" element={<PaymentPage />} />
+                <Route path="/booking-confirmation" element={<BookingConfirmationPage />} /> {/* Add this route */}
                 
                 {/* Auth Routes */}
                 <Route path="/login" element={<LoginPage />} />

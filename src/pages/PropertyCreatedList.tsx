@@ -10,14 +10,14 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch'; // Import the Switch component
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Loader2, Trash2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 
-// Update schema to include booking_type
 const propertySchema = z.object({
   title: z.string().min(5, { message: 'Title must be at least 5 characters long.' }),
   description: z.string().min(20, { message: 'Description must be at least 20 characters long.' }),
@@ -25,7 +25,7 @@ const propertySchema = z.object({
   capacity: z.coerce.number().int().positive({ message: 'Capacity must be a positive number.' }),
   location: z.string().min(2, { message: 'Location is required.' }),
   amenities: z.string().transform(val => val.split(',').map(item => item.trim())),
-  booking_type: z.enum(['instant', 'request']), // Add booking_type to schema
+  booking_type: z.enum(['instant', 'request']),
 });
 
 type PropertyFormValues = z.infer<typeof propertySchema>;
@@ -45,26 +45,27 @@ const PropertyCreateEdit: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
   const [pricingRules, setPricingRules] = useState<PricingRule[]>([]);
-  
+
   const {
     register,
     handleSubmit,
     setValue,
-    watch, // Use watch to get the current value of the booking_type
+    watch,
     formState: { errors },
   } = useForm<PropertyFormValues>({
     resolver: zodResolver(propertySchema),
     defaultValues: {
-        booking_type: 'instant', // Default to instant booking
+        booking_type: 'instant',
     }
   });
 
   const bookingType = watch('booking_type');
-  
+
   useEffect(() => {
-    if (isEditing) {
+    if (isEditing && propertyId) {
       const fetchPropertyData = async () => {
         setIsLoading(true);
         const { data: propData, error: propError } = await supabase
@@ -72,19 +73,21 @@ const PropertyCreateEdit: React.FC = () => {
           .select('*')
           .eq('id', propertyId)
           .single();
-        
+
         if (propError) {
           toast.error('Failed to fetch property details.');
+          setIsLoading(false);
           return;
         }
-        
+
         setValue('title', propData.title);
         setValue('description', propData.description);
         setValue('base_price_per_night', propData.base_price_per_night);
         setValue('capacity', propData.capacity);
         setValue('location', propData.location);
         setValue('amenities', (propData.amenities || []).join(', '));
-        setValue('booking_type', propData.booking_type); // Set booking type from fetched data
+        setValue('booking_type', propData.booking_type);
+        setExistingImages(propData.image_urls || []);
 
         const { data: rulesData, error: rulesError } = await supabase
             .from('pricing_rules')
@@ -103,32 +106,35 @@ const PropertyCreateEdit: React.FC = () => {
   }, [propertyId, isEditing, setValue]);
 
   const onPropertySubmit: SubmitHandler<PropertyFormValues> = async (formData) => {
-     if (!user) {
+    if (!user) {
       toast.error('You must be logged in.');
       return;
     }
-    
+
     setIsLoading(true);
-    let imageUrl = '';
-    if (imageFile) {
-        const fileName = `${user.id}/${Date.now()}_${imageFile.name}`;
+    let imageUrls = [...existingImages];
+
+    if (imageFiles.length > 0) {
+      for (const file of imageFiles) {
+        const fileName = `${user.id}/${Date.now()}_${file.name}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('property-images').upload(fileName, imageFile);
+            .from('property-images').upload(fileName, file);
 
         if (uploadError) {
             toast.error('Failed to upload image.');
             setIsLoading(false);
             return;
         }
-        imageUrl = supabase.storage.from('property-images').getPublicUrl(uploadData.path).data.publicUrl;
+        imageUrls.push(supabase.storage.from('property-images').getPublicUrl(uploadData.path).data.publicUrl);
+      }
     }
 
     const propertyData = {
       ...formData,
       owner_id: user.id,
-      ...(imageUrl && { image_url: imageUrl }),
+      image_urls: imageUrls,
     };
-    
+
     let query;
     if (isEditing) {
         query = supabase.from('properties').update(propertyData).eq('id', propertyId);
@@ -142,21 +148,20 @@ const PropertyCreateEdit: React.FC = () => {
         toast.error(`Operation failed: ${error.message}`);
     } else {
         toast.success(`Property successfully ${isEditing ? 'updated' : 'created'}!`);
-        // If creating, navigate to the edit page to manage pricing rules
         if(!isEditing && data) {
             navigate(`/edit-property/${data.id}`);
         }
     }
-    
+
     setIsLoading(false);
   };
-  
+
   const handleAddRule = async (newRule: Omit<PricingRule, 'id'>) => {
-    // ... (rest of the function is unchanged)
+    // This will be implemented in a future step
   }
 
   const handleDeleteRule = async (ruleId: number) => {
-    // ... (rest of the function is unchanged)
+    // This will be implemented in a future step
   }
 
   return (
@@ -170,7 +175,6 @@ const PropertyCreateEdit: React.FC = () => {
                         <CardDescription>Enter the details for your property listing.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        {/* Booking Type Toggle */}
                         <div className="space-y-2">
                             <Label>Booking Method</Label>
                             <div className="flex items-center space-x-2">
@@ -183,14 +187,7 @@ const PropertyCreateEdit: React.FC = () => {
                                 <Label htmlFor="booking-type-instant">Instant Book</Label>
                             </div>
                             <input type="hidden" {...register('booking_type')} />
-                            <p className="text-sm text-muted-foreground">
-                                {bookingType === 'instant' 
-                                    ? "Guests can book your property instantly without needing approval."
-                                    : "You will receive a request for each booking to approve or decline."
-                                }
-                            </p>
                         </div>
-                        {/* Other property fields... */}
                         <div className="space-y-2">
                             <Label htmlFor="title">Property Title</Label>
                             <Input id="title" {...register('title')} />
@@ -223,11 +220,9 @@ const PropertyCreateEdit: React.FC = () => {
                             <Input id="amenities" {...register('amenities')} placeholder="e.g., Wi-Fi, Pool, Air Conditioning" />
                             {errors.amenities && <p className="text-destructive text-sm">{errors.amenities.message}</p>}
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="image">Property Image</Label>
-                            <Input id="image" type="file" onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)} accept="image/*" />
-                        </div>
-                        
+
+                        <ImageUpload onFilesChange={setImageFiles} existingImages={existingImages} />
+
                         <Button type="submit" className="w-full btn-primary" disabled={isLoading}>
                             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {isEditing ? 'Update Property Details' : 'Save Property'}
@@ -268,8 +263,6 @@ const PropertyCreateEdit: React.FC = () => {
   );
 };
 
-
-// The PricingRuleForm component remains the same
 const pricingRuleSchema = z.object({
     name: z.string().min(3),
     type: z.enum(['nightly_override', 'weekly_discount_percent']),

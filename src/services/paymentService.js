@@ -244,6 +244,40 @@ class PaymentService {
     }
   }
 
+  async handlePayFastWebhook(webhookData) {
+    try {
+      const { payment_status, m_payment_id, amount_gross } = webhookData;
+      
+      // Verify signature
+      if (!this.verifyPayFastSignature(webhookData)) {
+        throw new Error('Invalid signature verification');
+      }
+
+      // Update payment status
+      const payment = await pool.query(
+        'SELECT * FROM payments WHERE provider_transaction_id = $1',
+        [m_payment_id]
+      );
+
+      if (payment.rows.length === 0) {
+        throw new Error('Payment not found');
+      }
+
+      const status = payment_status === 'COMPLETE' ? 'completed' : 'failed';
+      await pool.query(
+        'UPDATE payments SET status = $1, processed_at = NOW(), webhook_data = $2 WHERE id = $3',
+        [status, JSON.stringify(webhookData), payment.rows[0].id]
+      );
+      if (status === 'completed') {
+        await this.confirmBooking(payment.rows[0].booking_id);
+      }
+      return { success: true };
+    } catch (error) {
+      console.error('PayFast webhook error:', error);
+      throw error;
+    }
+  }
+
   async confirmBooking(bookingId) {
     try {
       // Update booking status
@@ -605,41 +639,4 @@ router.post('/snapscan', async (req, res) => {
   }
 });
 
-module.exports = router;d_at = NOW(), webhook_data = $2 WHERE id = $3',
-        [status, JSON.stringify(webhookData), payment.rows[0].id]
-      );
-
-      if (status === 'completed') {
-        await this.confirmBooking(payment.rows[0].booking_id);
-      }
-
-      return { success: true };
-    } catch (error) {
-      console.error('Ozow webhook error:', error);
-      throw error;
-    }
-  }
-
-  async handlePayFastWebhook(webhookData) {
-    try {
-      const { payment_status, m_payment_id, amount_gross } = webhookData;
-      
-      // Verify signature
-      if (!this.verifyPayFastSignature(webhookData)) {
-        throw new Error('Invalid signature verification');
-      }
-
-      // Update payment status
-      const payment = await pool.query(
-        'SELECT * FROM payments WHERE provider_transaction_id = $1',
-        [m_payment_id]
-      );
-
-      if (payment.rows.length === 0) {
-        throw new Error('Payment not found');
-      }
-
-      const status = payment_status === 'COMPLETE' ? 'completed' : 'failed';
-      
-      await pool.query(
-        'UPDATE payments SET status = $1, processe
+module.exports = router;
