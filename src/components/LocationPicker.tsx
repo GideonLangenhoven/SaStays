@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MapPin } from 'lucide-react';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 
 interface LocationPickerProps {
   location: {
@@ -34,50 +36,82 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ location, onLoca
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="address">Street Address</Label>
-          <Input
-            id="address"
-            value={location.address}
-            onChange={(e) => handleChange('address', e.target.value)}
-            placeholder="e.g., 123 Beach Road"
-          />
-          {errors.address && <p className="text-destructive text-sm">{errors.address.message}</p>}
-        </div>
+        <FormField
+          control={{}} // Placeholder
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Street Address</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  value={location.address}
+                  onChange={(e) => handleChange('address', e.target.value)}
+                  placeholder="e.g., 123 Beach Road"
+                />
+              </FormControl>
+              <FormMessage>{errors.address?.message}</FormMessage>
+            </FormItem>
+          )}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-                <Label htmlFor="city">City</Label>
-                <Input
-                id="city"
-                value={location.city}
-                onChange={(e) => handleChange('city', e.target.value)}
-                placeholder="e.g., Cape Town"
-                />
-                {errors.city && <p className="text-destructive text-sm">{errors.city.message}</p>}
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="province">Province</Label>
-                <Input
-                id="province"
-                value={location.province}
-                onChange={(e) => handleChange('province', e.target.value)}
-                placeholder="e.g., Western Cape"
-                />
-                {errors.province && <p className="text-destructive text-sm">{errors.province.message}</p>}
-            </div>
+          <FormField
+            control={{}} // Placeholder
+            name="city"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>City</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    value={location.city}
+                    onChange={(e) => handleChange('city', e.target.value)}
+                    placeholder="e.g., Cape Town"
+                  />
+                </FormControl>
+                <FormMessage>{errors.city?.message}</FormMessage>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={{}} // Placeholder
+            name="province"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Province</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    value={location.province}
+                    onChange={(e) => handleChange('province', e.target.value)}
+                    placeholder="e.g., Western Cape"
+                  />
+                </FormControl>
+                <FormMessage>{errors.province?.message}</FormMessage>
+              </FormItem>
+            )}
+          />
         </div>
 
-        <div className="space-y-2">
-            <Label htmlFor="postal_code">Postal Code</Label>
-            <Input
-                id="postal_code"
-                value={location.postal_code}
-                onChange={(e) => handleChange('postal_code', e.target.value)}
-                placeholder="e.g., 8005"
-            />
-            {errors.postal_code && <p className="text-destructive text-sm">{errors.postal_code.message}</p>}
-        </div>
+        <FormField
+          control={{}} // Placeholder
+          name="postal_code"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Postal Code</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  value={location.postal_code}
+                  onChange={(e) => handleChange('postal_code', e.target.value)}
+                  placeholder="e.g., 8005"
+                />
+              </FormControl>
+              <FormMessage>{errors.postal_code?.message}</FormMessage>
+            </FormItem>
+          )}
+        />
 
         <div className="pt-4 mt-4 border-t">
             <Label>Map Location (Optional)</Label>

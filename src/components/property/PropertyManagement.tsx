@@ -143,7 +143,7 @@ const PropertyCard = ({ property, onEdit, onDelete, onToggleStatus }: {
 };
 
 // Main Property Listing Component
-const PropertyListingManager = () => {
+const PropertyManagement = () => {
   const { state, dispatch } = useApp();
   const { user, isOwner } = useAuth();
   const [showForm, setShowForm] = useState(false);
@@ -256,4 +256,4 @@ const PropertyListingManager = () => {
   );
 };
 
-export default PropertyListingManager;
+export default PropertyManagement;

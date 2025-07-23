@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { BookOpen } from 'lucide-react';
+import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
 
 const HOUSE_RULES_LIST = [
   'No smoking',
@@ -36,21 +38,29 @@ export const HouseRulesSelector: React.FC<HouseRulesSelectorProps> = ({
           Set the rules for your property to ensure a smooth experience for everyone.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label>Common Rules</Label>
-          <div className="grid grid-cols-2 gap-4">
+          <FormLabel>Common Rules</FormLabel>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
             {HOUSE_RULES_LIST.map(rule => (
-              <div key={rule} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`rule-${rule}`}
-                  checked={selectedRules.includes(rule)}
-                  onCheckedChange={() => onRuleToggle(rule)}
-                />
-                <Label htmlFor={`rule-${rule}`} className="text-sm font-normal">
-                  {rule}
-                </Label>
-              </div>
+              <FormField
+                key={rule}
+                control={{}} // Placeholder
+                name="houseRules"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={selectedRules.includes(rule)}
+                        onCheckedChange={() => onRuleToggle(rule)}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>{rule}</FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
             ))}
           </div>
         </div>

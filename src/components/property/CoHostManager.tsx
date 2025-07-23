@@ -1,4 +1,4 @@
-// src/components/property/CoHostManager.tsx
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus, Trash2 } from 'lucide-react';
-import { coHostApi } from '../services/api'; // Assuming you create a coHostApi service
+import { coHostApi } from '../../services/api'; // Assuming you create a coHostApi service
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 
 interface CoHost {
     id: number;
@@ -23,16 +27,34 @@ interface CoHostManagerProps {
     propertyId: number;
 }
 
+const newCoHostSchema = z.object({
+  coHostEmail: z.string().email("Invalid email address"),
+  permissions: z.object({
+    can_edit_listing: z.boolean(),
+    can_manage_bookings: z.boolean(),
+    can_manage_calendar: z.boolean(),
+    can_message_guests: z.boolean(),
+  }).partial().default({ can_message_guests: true }), // Default message guests to true
+});
+
+type NewCoHostFormData = z.infer<typeof newCoHostSchema>;
+
 export const CoHostManager: React.FC<CoHostManagerProps> = ({ propertyId }) => {
     const [coHosts, setCoHosts] = useState<CoHost[]>([]);
-    const [newCoHostEmail, setNewCoHostEmail] = useState('');
-    const [permissions, setPermissions] = useState({
-        can_edit_listing: false,
-        can_manage_bookings: false,
-        can_manage_calendar: false,
-        can_message_guests: true,
-    });
     const { toast } = useToast();
+
+    const form = useForm<NewCoHostFormData>({
+      resolver: zodResolver(newCoHostSchema),
+      defaultValues: {
+        coHostEmail: '',
+        permissions: {
+          can_edit_listing: false,
+          can_manage_bookings: false,
+          can_manage_calendar: false,
+          can_message_guests: true,
+        },
+      },
+    });
 
     useEffect(() => {
         const fetchCoHosts = async () => {
@@ -48,21 +70,15 @@ export const CoHostManager: React.FC<CoHostManagerProps> = ({ propertyId }) => {
         fetchCoHosts();
     }, [propertyId, toast]);
 
-    const handleAddCoHost = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newCoHostEmail) return;
-
+    const handleAddCoHost = async (values: NewCoHostFormData) => {
         try {
-            const { data: newCoHost } = await coHostApi.addCoHost(propertyId, {
-                coHostEmail: newCoHostEmail,
-                permissions,
-            });
+            const { data: newCoHost } = await coHostApi.addCoHost(propertyId, values);
             setCoHosts([...coHosts, newCoHost]);
-            setNewCoHostEmail('');
+            form.reset(); // Clear form after successful submission
             toast({ title: "Success", description: "Co-host added successfully." });
         } catch (error) {
             console.error("Failed to add co-host:", error);
-            toast({ title: "Error", description: "Failed to add co-host. Make sure the user exists.", variant: "destructive" });
+            toast({ title: "Error", description: "Failed to add co-host. Make sure the user exists and is not already a co-host.", variant: "destructive" });
         }
     };
 
@@ -77,8 +93,11 @@ export const CoHostManager: React.FC<CoHostManagerProps> = ({ propertyId }) => {
         }
     };
 
-    const handlePermissionChange = (key: keyof typeof permissions) => {
-        setPermissions(prev => ({ ...prev, [key]: !prev[key] }));
+    const permissionLabels: Record<keyof NewCoHostFormData['permissions'], string> = {
+      can_edit_listing: "Edit Listing",
+      can_manage_bookings: "Manage Bookings",
+      can_manage_calendar: "Manage Calendar",
+      can_message_guests: "Message Guests",
     };
 
     return (
@@ -89,53 +108,78 @@ export const CoHostManager: React.FC<CoHostManagerProps> = ({ propertyId }) => {
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
-                    {coHosts.map(coHost => (
-                        <div key={coHost.id} className="flex items-center justify-between p-3 border rounded-lg">
-                            <div>
-                                <p className="font-medium">{coHost.co_host_email}</p>
-                                <p className="text-xs text-muted-foreground">
-                                    {Object.entries(coHost.permissions)
-                                        .filter(([, value]) => value)
-                                        .map(([key]) => key.replace(/_/g, ' ').replace('can ', ''))
-                                        .join(', ')}
-                                </p>
+                    {coHosts.length === 0 ? (
+                        <p className="text-muted-foreground text-center py-4">No co-hosts added yet.</p>
+                    ) : (
+                        coHosts.map(coHost => (
+                            <div key={coHost.id} className="flex items-center justify-between p-3 border rounded-lg">
+                                <div>
+                                    <p className="font-medium">{coHost.co_host_email}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Permissions: {
+                                            Object.entries(coHost.permissions)
+                                                .filter(([, value]) => value)
+                                                .map(([key]) => permissionLabels[key as keyof NewCoHostFormData['permissions']])
+                                                .join(', ') || 'None'
+                                        }
+                                    </p>
+                                </div>
+                                <Button variant="ghost" size="icon" onClick={() => handleRemoveCoHost(coHost.id)}>
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
                             </div>
-                            <Button variant="ghost" size="icon" onClick={() => handleRemoveCoHost(coHost.id)}>
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    ))}
+                        ))
+                    )}
                 </div>
 
-                <form onSubmit={handleAddCoHost} className="mt-6 space-y-4 border-t pt-6">
-                    <h3 className="text-lg font-semibold">Add New Co-host</h3>
-                    <Input
-                        type="email"
-                        placeholder="Enter co-host's email address"
-                        value={newCoHostEmail}
-                        onChange={(e) => setNewCoHostEmail(e.target.value)}
-                    />
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Permissions</label>
-                        <div className="grid grid-cols-2 gap-2">
-                            {Object.keys(permissions).map((key) => (
-                                <div key={key} className="flex items-center space-x-2">
-                                    <Checkbox
-                                        id={key}
-                                        checked={permissions[key as keyof typeof permissions]}
-                                        onCheckedChange={() => handlePermissionChange(key as keyof typeof permissions)}
-                                    />
-                                    <label htmlFor={key} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                        {key.replace(/_/g, ' ')}
-                                    </label>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    <Button type="submit" className="w-full">
-                        <UserPlus className="mr-2 h-4 w-4" /> Add Co-host
-                    </Button>
-                </form>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(handleAddCoHost)} className="mt-6 space-y-4 border-t pt-6">
+                      <h3 className="text-lg font-semibold">Add New Co-host</h3>
+                      <FormField
+                          control={form.control}
+                          name="coHostEmail"
+                          render={({ field }) => (
+                              <FormItem>
+                                  <FormLabel>Co-host Email</FormLabel>
+                                  <FormControl>
+                                      <Input placeholder="cohost@example.com" {...field} />
+                                  </FormControl>
+                                  <FormDescription>Enter the email address of the user you want to add as a co-host.</FormDescription>
+                                  <FormMessage />
+                              </FormItem>
+                          )}
+                      />
+                      <div className="space-y-2">
+                          <FormLabel>Permissions</FormLabel>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {Object.keys(permissionLabels).map((key) => (
+                                  <FormField
+                                      key={key}
+                                      control={form.control}
+                                      name={`permissions.${key}` as `permissions.${keyof NewCoHostFormData['permissions']}`}
+                                      render={({ field }) => (
+                                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                                              <FormControl>
+                                                  <Checkbox
+                                                      checked={field.value}
+                                                      onCheckedChange={field.onChange}
+                                                  />
+                                              </FormControl>
+                                              <div className="space-y-1 leading-none">
+                                                  <FormLabel>{permissionLabels[key as keyof NewCoHostFormData['permissions']]}</FormLabel>
+                                              </div>
+                                          </FormItem>
+                                      )}
+                                  />
+                              ))}
+                          </div>
+                          <FormMessage />
+                      </div>
+                      <Button type="submit" className="w-full">
+                          <UserPlus className="mr-2 h-4 w-4" /> Add Co-host
+                      </Button>
+                  </form>
+                </Form>
             </CardContent>
         </Card>
     );

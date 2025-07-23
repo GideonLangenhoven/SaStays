@@ -25,7 +25,6 @@ export default function LanguageSelector() {
   const { language, setLanguage } = useLanguage();
   const [mounted, setMounted] = useState(false);
 
-  // This effect is to ensure hydration doesn't cause issues
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -35,32 +34,30 @@ export default function LanguageSelector() {
   };
 
   if (!mounted) {
-    return null;
+    return <div className="w-[80px] h-10" />; // Placeholder for SSR
   }
 
   return (
-    <div className="flex items-center">
-      <Select value={language} onValueChange={handleLanguageChange}>
-        <SelectTrigger 
-          className="w-[80px] h-10 border-none bg-transparent focus:ring-0" 
-          aria-label="Select Language"
-        >
-          <div className="flex items-center space-x-2">
-            <span />
-            <SelectValue placeholder="Select language" />
-          </div>
-        </SelectTrigger>
-        <SelectContent align="start" className="w-[160px]">
-          {languages.map((language) => (
-            <SelectItem key={language.code} value={language.code} className="cursor-pointer">
-              <div className="flex items-center space-x-2">
-                <span>{language.flag}</span>
-                <span>{language.name}</span>
-              </div>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <Select value={language} onValueChange={handleLanguageChange}>
+      <SelectTrigger 
+        className="w-auto h-10 border-none bg-transparent focus:ring-0 text-sm" 
+        aria-label="Select Language"
+      >
+        <div className="flex items-center gap-2">
+          <span>{languages.find(l => l.code === language)?.flag}</span>
+          <SelectValue placeholder="Language" />
+        </div>
+      </SelectTrigger>
+      <SelectContent align="end" className="w-[180px]">
+        {languages.map((lang) => (
+          <SelectItem key={lang.code} value={lang.code} className="cursor-pointer">
+            <div className="flex items-center gap-3">
+              <span className="text-lg">{lang.flag}</span>
+              <span className="font-medium">{lang.name}</span>
+            </div>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

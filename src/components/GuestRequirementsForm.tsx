@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Users } from 'lucide-react';
+import { FormField, FormItem, FormLabel, FormControl, FormDescription } from '@/components/ui/form';
 
 interface GuestRequirements {
     minAge?: number;
@@ -32,23 +34,43 @@ export const GuestRequirementsForm: React.FC<GuestRequirementsFormProps> = ({ re
           Set requirements for guests who can book your property.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="verificationRequired">Require Verified Email/Phone</Label>
-          <Switch
-            id="verificationRequired"
-            checked={requirements.verificationRequired}
-            onCheckedChange={(checked) => handleChange('verificationRequired', checked)}
-          />
-        </div>
-        <div className="flex items-center justify-between">
-          <Label htmlFor="governmentIdRequired">Require Government-Issued ID</Label>
-          <Switch
-            id="governmentIdRequired"
-            checked={requirements.governmentIdRequired}
-            onCheckedChange={(checked) => handleChange('governmentIdRequired', checked)}
-          />
-        </div>
+      <CardContent className="space-y-6">
+        <FormField
+          control={{}} // This is a placeholder, as we are not using react-hook-form here
+          name="verificationRequired"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">Require Verified Email/Phone</FormLabel>
+                <FormDescription>Guests must have a verified email and phone number to book.</FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={requirements.verificationRequired}
+                  onCheckedChange={(checked) => handleChange('verificationRequired', checked)}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={{}} // This is a placeholder, as we are not using react-hook-form here
+          name="governmentIdRequired"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">Require Government-Issued ID</FormLabel>
+                <FormDescription>Guests must submit a government-issued ID to book.</FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={requirements.governmentIdRequired}
+                  onCheckedChange={(checked) => handleChange('governmentIdRequired', checked)}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
         <div className="space-y-2">
           <Label htmlFor="minAge">Minimum Guest Age</Label>
           <Input
