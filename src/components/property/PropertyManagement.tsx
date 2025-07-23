@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -16,7 +17,7 @@ import {
   Bath,
   Users,
 } from 'lucide-react';
-import { useApp, useAuth } from '../AppContext';
+import { useApp, useAuth } from '../../contexts/AppContextDemo';
 import { propertyApi } from '../../services/api';
 import { PropertyListingForm } from './PropertyListingForm';
 import { toast } from 'sonner';

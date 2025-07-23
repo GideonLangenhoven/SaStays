@@ -1,96 +1,85 @@
-version: "3.8"
+# docker-compose.yml
+version: '3.8'
+
 services:
-  db:
-    image: postgres:15
+  # Frontend Application
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
     environment:
-      POSTGRES_DB: coastal_booking
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: yourpassword
+      - NODE_ENV=production
+    depends_on:
+      - backend
+      - postgres
+    networks:
+      - sastays-network
+    restart: unless-stopped
+
+  # Backend API (you'll need to create this)
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://sastays:sastays_password@postgres:5432/sastays_db
+      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+      - OZOW_SITE_CODE=your-ozow-site-code
+      - OZOW_PRIVATE_KEY=your-ozow-private-key
+      - PAYFAST_MERCHANT_ID=your-payfast-merchant-id
+      - PAYFAST_MERCHANT_KEY=your-payfast-merchant-key
+      - PAYFAST_PASSPHRASE=your-payfast-passphrase
+      - EMAIL_HOST=smtp.gmail.com
+      - EMAIL_PORT=587
+      - EMAIL_USER=your-email@gmail.com
+      - EMAIL_PASS=your-app-password
+      - TWILIO_ACCOUNT_SID=your-twilio-account-sid
+      - TWILIO_AUTH_TOKEN=your-twilio-auth-token
+      - TWILIO_PHONE_NUMBER=your-twilio-phone
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - sastays-network
+    restart: unless-stopped
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=sastays_db
+      - POSTGRES_USER=sastays
+      - POSTGRES_PASSWORD=sastays_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./server/migrations:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
-    volumes:
-      - db_data:/var/lib/postgresql/data
+    networks:
+      - sastays-network
+    restart: unless-stopped
 
+  # Redis for caching and sessions
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
-
-  server:
-    build: ./server
-    environment:
-      # Database
-      - PGUSER=postgres
-      - PGHOST=db
-      - PGDATABASE=coastal_booking
-      - PGPASSWORD=yourpassword
-      - PGPORT=5432
-      - DATABASE_URL=postgresql://postgres:yourpassword@db:5432/coastal_booking
-
-      # Redis
-      - REDIS_URL=redis://redis:6379
-
-      # Security
-      - JWT_SECRET=your_super_secure_jwt_secret_at_least_32_characters_long
-      - ENCRYPTION_KEY=your_encryption_key_for_sensitive_data
-
-      # Application Settings
-      - NODE_ENV=production
-      - VITE_APP_URL=https://yourdomain.com
-      - VITE_API_URL=https://api.yourdomain.com
-
-      # Payment Gateways (test values)
-      - PAYFAST_SANDBOX=true
-      - OZOW_SANDBOX=true
-      - PAYFAST_MERCHANT_ID=your_payfast_merchant_id
-      - PAYFAST_MERCHANT_KEY=your_payfast_merchant_key
-      - PAYFAST_PASSPHRASE=your_payfast_passphrase
-      - OZOW_SITE_CODE=your_ozow_site_code
-      - OZOW_PRIVATE_KEY=your_ozow_private_key
-      - OZOW_API_KEY=your_ozow_api_key
-      - ZAPPER_MERCHANT_ID=your_zapper_merchant_id
-      - ZAPPER_API_KEY=your_zapper_api_key
-      - SNAPSCAN_SNAPCODE_ID=your_snapscan_id
-      - SNAPSCAN_API_KEY=your_snapscan_api_key
-
-      # Communication Services (test values)
-      - TWILIO_ACCOUNT_SID=your_twilio_account_sid
-      - TWILIO_AUTH_TOKEN=your_twilio_auth_token
-      - TWILIO_PHONE_NUMBER=your_twilio_phone_number
-      - SENDGRID_API_KEY=your_sendgrid_api_key
-      - SENDGRID_FROM_EMAIL=noreply@yourdomain.com
-      - SENDGRID_FROM_NAME=Your Property Management
-
-      # File Storage
-      - CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
-      - CLOUDINARY_API_KEY=your_cloudinary_api_key
-      - CLOUDINARY_API_SECRET=your_cloudinary_api_secret
-
-      # Maps & Geocoding
-      - GOOGLE_MAPS_API_KEY=your_google_maps_api_key
-
-      # Monitoring & Logging
-      - SENTRY_DSN=your_sentry_dsn
-      - LOG_LEVEL=info
-
-      # Rate Limiting
-      - RATE_LIMIT_REQUESTS_PER_MINUTE=100
-
-      # Calendar Sync
-      - GOOGLE_CALENDAR_CLIENT_ID=your_google_client_id
-      - GOOGLE_CALENDAR_CLIENT_SECRET=your_google_client_secret
-
-      # Backup Configuration
-      - BACKUP_SCHEDULE=0 2 * * *
-      - BACKUP_RETENTION_DAYS=30
-    ports:
-      - "5001:5001"
-    depends_on:
-      - db
-      - redis
+    networks:
+      - sastays-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
 
 volumes:
-  db_data:
+  postgres_data:
   redis_data:
+
+networks:
+  sastays-network:
+    driver: bridge

@@ -266,4 +266,37 @@ class ApiService {
 }
 
 export const apiService = new ApiService();
+export const apiClient = apiService; // For backward compatibility with new services
 export default apiService;
+
+// Named exports for specific API sections
+export const propertyApi = {
+  getProperties: () => apiService.getProperties(),
+  getProperty: (id: string) => apiService.getProperty(id),
+  createProperty: (data: PropertyFormData) => apiService.createProperty(data),
+  updateProperty: (id: string, data: Partial<PropertyFormData>) => apiService.updateProperty(id, data),
+  deleteProperty: (id: string) => apiService.deleteProperty(id),
+  getPropertyBookedDates: (propertyId: string) => apiService.getPropertyBookedDates(propertyId),
+  uploadPhotos: (propertyId: string, files: File[]) => apiService.uploadPropertyPhotos(propertyId, files),
+  deletePhoto: (propertyId: string, photoId: string) => apiService.deletePropertyPhoto(propertyId, photoId),
+  checkAvailability: (propertyId: string, checkIn: string, checkOut: string) => apiService.checkAvailability(propertyId, checkIn, checkOut),
+  updateAvailability: (propertyId: string, dates: Array<{ date: string; available: boolean }>) => apiService.updatePropertyAvailability(propertyId, dates),
+  getReviews: (propertyId: string) => apiService.getPropertyReviews(propertyId),
+  searchProperties: (params: any) => apiService.searchProperties(params)
+};
+
+export const bookingApi = {
+  getBookings: (propertyId?: string) => apiService.getBookings(propertyId),
+  getBooking: (id: string) => apiService.getBooking(id),
+  createBooking: (data: BookingFormData) => apiService.createBooking(data),
+  updateStatus: (id: string, status: Booking['booking_status']) => apiService.updateBookingStatus(id, status),
+  cancelBooking: (id: string, reason?: string) => apiService.cancelBooking(id, reason),
+  getMessages: (bookingId: string) => apiService.getBookingMessages(bookingId),
+  sendMessage: (bookingId: string, content: string, attachments?: File[]) => apiService.sendMessage(bookingId, content, attachments)
+};
+
+export const paymentApi = {
+  initiatePayment: (bookingId: string, method: string) => apiService.initiatePayment(bookingId, method),
+  verifyPayment: (reference: string) => apiService.verifyPayment(reference),
+  getPaymentHistory: (bookingId?: string) => apiService.getPaymentHistory(bookingId)
+};
