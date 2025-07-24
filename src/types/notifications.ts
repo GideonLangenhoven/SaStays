@@ -77,7 +77,7 @@ export type NotificationType =
 
 export type NotificationChannel = 'email' | 'sms' | 'push' | 'in_app';
 
-export type NotificationStatus = 'pending' | 'sent' | 'failed' | 'read';
+export type NotificationStatus = 'pending' | 'sent' | 'failed' | 'read' | 'unread';
 
 export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
 
@@ -139,4 +139,6 @@ export interface BulkNotificationRequest {
   channels: NotificationChannel[];
   priority?: NotificationPriority;
   scheduledFor?: Date;
-}
+} 
+
+export default NotificationTemplate;

@@ -301,4 +301,6 @@ export interface PrivacyPreferencesFormData {
   communicationFrequency: CustomerPrivacySettings['communicationFrequency'];
   preferredContactMethod: CustomerPrivacySettings['preferredContactMethod'];
   privacyLevel: CustomerPrivacySettings['privacyLevel'];
-}
+} 
+
+export default ConsentFormData;

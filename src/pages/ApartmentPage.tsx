@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { parseISO, format, differenceInDays } from 'date-fns';
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { ApartmentProps } from "@/components/ApartmentCard";
-import { getPropertyById, getBookedDates } from "@/services/api";
+import { propertyApi } from "@/services/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -42,8 +41,7 @@ export default function ApartmentPage() {
                     if (propertyError) throw propertyError;
                     setApartment(propertyData);
 
-                    const { data: bookedData, error: bookedError } = await getBookedDates(id);
-                    if (bookedError) throw bookedError;
+                    const bookedData = await propertyApi.getPropertyBookedDates(id);
                     setBookedDates(bookedData.map((d: string) => parseISO(d)));
                     
                     const { data: ratingsData, error: ratingsError } = await supabase.from('reviews').select('*, profiles(full_name)').eq('property_id', id);
@@ -180,7 +178,6 @@ export default function ApartmentPage() {
                     </div>
                 </section>
             </main>
-            <Footer />
         </div>
     );
 }

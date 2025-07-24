@@ -14,7 +14,6 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Loader2, Trash2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUpload } from '@/components/ui/ImageUpload';
 
@@ -258,7 +257,6 @@ const PropertyCreateEdit: React.FC = () => {
                 </Card>
             )}
         </main>
-        <Footer />
     </div>
   );
 };

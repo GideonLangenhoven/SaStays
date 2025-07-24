@@ -75,4 +75,6 @@ export interface CreateTemplateRequest {
   subject?: string;
   content: string;
   category: MessageTemplate['category'];
-}
+} 
+
+export default MessageTemplate;

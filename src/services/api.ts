@@ -53,7 +53,7 @@ class ApiService {
   // Properties API
   async getProperties(): Promise<Property[]> {
     const response = await this.api.get('/properties');
-    return response.data.data;
+    return response.data;
   }
 
   async getProperty(id: string): Promise<Property> {
@@ -299,4 +299,15 @@ export const paymentApi = {
   initiatePayment: (bookingId: string, method: string) => apiService.initiatePayment(bookingId, method),
   verifyPayment: (reference: string) => apiService.verifyPayment(reference),
   getPaymentHistory: (bookingId?: string) => apiService.getPaymentHistory(bookingId)
+};
+
+export const reviewApi = {
+  getReviews: (propertyId: string) => apiService.getPropertyReviews(propertyId),
+  createReview: (data: ReviewFormData & { booking_id: string }) => apiService.createReview(data),
+  respondToReview: (reviewId: string, response: string) => apiService.respondToReview(reviewId, response)
+};
+
+export const messageApi = {
+  getMessages: (bookingId: string) => apiService.getBookingMessages(bookingId),
+  sendMessage: (bookingId: string, content: string, attachments?: File[]) => apiService.sendMessage(bookingId, content, attachments)
 };

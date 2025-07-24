@@ -72,3 +72,5 @@ export const mockBooking = {
   total_amount: 3400,
   status: 'confirmed',
 };
+
+export default mockBooking;

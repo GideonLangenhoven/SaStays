@@ -43,7 +43,7 @@ import {
   NotificationStatus,
   NotificationChannel 
 } from '@/types/notifications';
-import notificationService from '@/services/notificationService';
+import { notificationService } from '@/services/NotificationService';
 
 interface NotificationCenterProps {
   ownerId: string;

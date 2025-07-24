@@ -9,6 +9,37 @@ const bcrypt = require('bcryptjs');
 const { addDays, eachDayOfInterval, format, parseISO, differenceInDays } = require('date-fns');
 const { sendOwnerSMS } = require('./smsService');
 
+// Health check endpoint
+router.get('/health', (req, res) => {
+    res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Test database connection
+router.get('/test-db', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT COUNT(*) FROM properties');
+        res.json({ 
+            status: 'Database connected', 
+            properties_count: result.rows[0].count,
+            timestamp: new Date().toISOString() 
+        });
+    } catch (err) {
+        console.error('Database connection error:', err.message);
+        res.status(500).json({ error: 'Database connection failed', message: err.message });
+    }
+});
+
+// Get all properties (public endpoint)
+router.get('/properties', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM properties WHERE status = $1 ORDER BY created_at DESC', ['active']);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error fetching properties:', err.message);
+        res.status(500).json({ error: 'Server error', message: err.message });
+    }
+});
+
 // Middleware to verify JWT
 const auth = (req, res, next) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');

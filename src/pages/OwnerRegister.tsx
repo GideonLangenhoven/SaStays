@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Lock, User as UserIcon, Loader2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -135,7 +134,6 @@ export default function OwnerRegister() {
           )}
         </Card>
       </main>
-      <Footer />
     </div>
   );
 }

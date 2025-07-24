@@ -28,16 +28,6 @@ CREATE TABLE owners (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Co-hosts table
-CREATE TABLE co_hosts (
-    id SERIAL PRIMARY KEY,
-    property_id INTEGER REFERENCES properties(id) ON DELETE CASCADE,
-    owner_id INTEGER REFERENCES owners(id) ON DELETE CASCADE,
-    co_host_id INTEGER REFERENCES owners(id) ON DELETE CASCADE,
-    permissions JSONB, -- e.g., {"can_edit_listing": true, "can_manage_bookings": true}
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Customers table
 CREATE TABLE customers (
     id SERIAL PRIMARY KEY,
@@ -83,6 +73,16 @@ CREATE TABLE properties (
     total_reviews INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Co-hosts table
+CREATE TABLE co_hosts (
+    id SERIAL PRIMARY KEY,
+    property_id INTEGER REFERENCES properties(id) ON DELETE CASCADE,
+    owner_id INTEGER REFERENCES owners(id) ON DELETE CASCADE,
+    co_host_id INTEGER REFERENCES owners(id) ON DELETE CASCADE,
+    permissions JSONB, -- e.g., {"can_edit_listing": true, "can_manage_bookings": true}
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Custom pricing table for date-specific pricing
@@ -144,4 +144,51 @@ CREATE TABLE payments (
 
 -- Messages table for guest communication
 CREATE TABLE messages (
-    id SERIAL PRIMARY KEY
+    id SERIAL PRIMARY KEY,
+    booking_id INTEGER REFERENCES bookings(id) ON DELETE CASCADE,
+    sender_type VARCHAR(20) NOT NULL, -- 'owner' or 'customer'
+    sender_id INTEGER NOT NULL,
+    message TEXT NOT NULL,
+    message_type VARCHAR(20) DEFAULT 'text', -- 'text', 'image', 'document'
+    attachment_url TEXT,
+    read_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Reviews table
+CREATE TABLE reviews (
+    id SERIAL PRIMARY KEY,
+    booking_id INTEGER REFERENCES bookings(id) ON DELETE CASCADE,
+    customer_id INTEGER REFERENCES customers(id) ON DELETE CASCADE,
+    property_id INTEGER REFERENCES properties(id) ON DELETE CASCADE,
+    rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+    title VARCHAR(255),
+    comment TEXT,
+    status VARCHAR(20) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Payout methods table for owner bank details
+CREATE TABLE payout_methods (
+    id SERIAL PRIMARY KEY,
+    owner_id INTEGER REFERENCES owners(id) ON DELETE CASCADE,
+    account_holder_name VARCHAR(255) NOT NULL,
+    bank_name VARCHAR(255) NOT NULL,
+    account_number VARCHAR(50) NOT NULL,
+    account_type VARCHAR(20) DEFAULT 'checking',
+    routing_number VARCHAR(20),
+    is_default BOOLEAN DEFAULT false,
+    is_verified BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create indexes for better performance
+CREATE INDEX idx_properties_owner_id ON properties(owner_id);
+CREATE INDEX idx_bookings_property_id ON bookings(property_id);
+CREATE INDEX idx_bookings_customer_id ON bookings(customer_id);
+CREATE INDEX idx_bookings_status ON bookings(status);
+CREATE INDEX idx_messages_booking_id ON messages(booking_id);
+CREATE INDEX idx_reviews_property_id ON reviews(property_id);
+CREATE INDEX idx_custom_pricing_property_date ON custom_pricing(property_id, date);

@@ -76,4 +76,6 @@ describe('ApartmentCard', () => {
     expect(image).toBeInTheDocument();
     expect(image).toHaveAttribute('alt', mockProps.title);
   });
-});
+}); 
+
+export default ApartmentCard;

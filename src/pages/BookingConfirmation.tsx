@@ -4,7 +4,6 @@ import { CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 
 const BookingConfirmation: React.FC = () => {
     const [searchParams] = useSearchParams();
@@ -71,7 +70,6 @@ const BookingConfirmation: React.FC = () => {
                     </CardContent>
                 </Card>
             </main>
-            <Footer />
         </div>
     );
 };

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/supabaseClient';
 import { format, formatDistanceToNow, parseISO } from 'date-fns';

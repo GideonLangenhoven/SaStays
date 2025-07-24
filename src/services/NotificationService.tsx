@@ -1,5 +1,12 @@
 // src/services/NotificationService.ts
-import { toast } from '@/hooks/use-toast';
+import React, { useState, useCallback, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Mail, Phone, Bell, Settings } from 'lucide-react';
 
 export interface NotificationData {
   type: 'booking_confirmed' | 'booking_cancelled' | 'payment_received' | 'guest_message' | 'review_received';
@@ -19,6 +26,125 @@ export interface NotificationData {
 
 class NotificationService {
   private apiBaseUrl = '/api/notifications';
+  private ws: WebSocket | null = null;
+  private notificationCallbacks: ((notification: any) => void)[] = [];
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+
+  // WebSocket initialization
+  initializeWebSocket(ownerId: string) {
+    try {
+      const wsUrl = `ws://localhost:5001/ws/notifications/${ownerId}`;
+      this.ws = new WebSocket(wsUrl);
+
+      this.ws.onopen = () => {
+        console.log('WebSocket connected');
+        this.reconnectAttempts = 0;
+      };
+
+      this.ws.onmessage = (event) => {
+        try {
+          const notification = JSON.parse(event.data);
+          this.notificationCallbacks.forEach(callback => callback(notification));
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+
+      this.ws.onclose = () => {
+        console.log('WebSocket disconnected');
+        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+          setTimeout(() => {
+            this.reconnectAttempts++;
+            this.initializeWebSocket(ownerId);
+          }, 3000 * this.reconnectAttempts);
+        }
+      };
+
+      this.ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+    } catch (error) {
+      console.error('Failed to initialize WebSocket:', error);
+    }
+  }
+
+  // Subscribe to notifications
+  onNotification(callback: (notification: any) => void) {
+    this.notificationCallbacks.push(callback);
+    return () => {
+      this.notificationCallbacks = this.notificationCallbacks.filter(cb => cb !== callback);
+    };
+  }
+
+  // Disconnect WebSocket
+  disconnect() {
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
+    }
+    this.notificationCallbacks = [];
+  }
+
+  // Get notifications with pagination and filters
+  async getNotifications(page = 1, limit = 20, filters: any = {}) {
+    try {
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        ...filters
+      });
+
+      const response = await fetch(`${this.apiBaseUrl}?${queryParams}`);
+      if (!response.ok) throw new Error('Failed to fetch notifications');
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      return { notifications: [], unreadCount: 0 };
+    }
+  }
+
+  // Mark notification as read
+  async markAsRead(notificationId: string) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/${notificationId}/read`, {
+        method: 'PUT'
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      return false;
+    }
+  }
+
+  // Mark all notifications as read
+  async markAllAsRead(notificationIds: string[]) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/mark-all-read`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notificationIds })
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      return false;
+    }
+  }
+
+  // Delete notification
+  async deleteNotification(notificationId: string) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/${notificationId}`, {
+        method: 'DELETE'
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      return false;
+    }
+  }
 
   async sendDualNotification(notification: NotificationData): Promise<boolean> {
     try {
@@ -185,10 +311,9 @@ class NotificationService {
 export const notificationService = new NotificationService();
 
 // React Hook for notifications
-import { useState, useCallback } from 'react';
-
 export const useNotifications = () => {
   const [sending, setSending] = useState(false);
+  const { toast } = useToast();
 
   const sendNotification = useCallback(async (notification: NotificationData) => {
     setSending(true);
@@ -219,7 +344,7 @@ export const useNotifications = () => {
     } finally {
       setSending(false);
     }
-  }, []);
+  }, [toast]);
 
   return {
     sendNotification,
@@ -227,16 +352,7 @@ export const useNotifications = () => {
   };
 };
 
-// src/components/notifications/NotificationSettings.tsx
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { Mail, Phone, Bell, Settings } from 'lucide-react';
-
+// Notification preferences interface
 interface NotificationPreferences {
   emailEnabled: boolean;
   smsEnabled: boolean;
@@ -248,6 +364,7 @@ interface NotificationPreferences {
   phone: string;
 }
 
+// NotificationSettings Component
 export const NotificationSettings: React.FC = () => {
   const [preferences, setPreferences] = useState<NotificationPreferences>({
     emailEnabled: true,
@@ -428,3 +545,88 @@ export const NotificationSettings: React.FC = () => {
                   <Label>Email Notifications</Label>
                 </div>
                 <Switch
+                  checked={preferences.emailEnabled}
+                  onCheckedChange={(checked) => setPreferences(prev => ({
+                    ...prev,
+                    emailEnabled: checked
+                  }))}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4" />
+                  <Label>SMS Notifications</Label>
+                </div>
+                <Switch
+                  checked={preferences.smsEnabled}
+                  onCheckedChange={(checked) => setPreferences(prev => ({
+                    ...prev,
+                    smsEnabled: checked
+                  }))}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Notification Types */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Notification Types</h3>
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Booking Notifications</Label>
+                <Switch
+                  checked={preferences.bookingNotifications}
+                  onCheckedChange={(checked) => setPreferences(prev => ({
+                    ...prev,
+                    bookingNotifications: checked
+                  }))}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <Label>Payment Notifications</Label>
+                <Switch
+                  checked={preferences.paymentNotifications}
+                  onCheckedChange={(checked) => setPreferences(prev => ({
+                    ...prev,
+                    paymentNotifications: checked
+                  }))}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <Label>Message Notifications</Label>
+                <Switch
+                  checked={preferences.messageNotifications}
+                  onCheckedChange={(checked) => setPreferences(prev => ({
+                    ...prev,
+                    messageNotifications: checked
+                  }))}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <Label>Review Notifications</Label>
+                <Switch
+                  checked={preferences.reviewNotifications}
+                  onCheckedChange={(checked) => setPreferences(prev => ({
+                    ...prev,
+                    reviewNotifications: checked
+                  }))}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <Button onClick={savePreferences} disabled={loading}>
+              {loading ? "Saving..." : "Save Preferences"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};

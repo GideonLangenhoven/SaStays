@@ -73,3 +73,5 @@ describe('Index Page (Home)', () => {
     }
   });
 });
+
+export default Index;

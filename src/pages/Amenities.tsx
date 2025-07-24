@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import AmenityCategorySection from "@/components/AmenityCategorySection";
 import FacilitiesSection from "@/components/FacilitiesSection";
@@ -190,7 +189,7 @@ export default function Amenities() {
           </div>
         </section>
       </main>
-      <Footer />
     </div>
   );
 }
+

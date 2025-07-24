@@ -222,4 +222,6 @@ export interface PropertyFormData {
   amenities: string[];
   houseRules: string[];
   images: File[];
-}
+} 
+
+export default PropertyFormData;

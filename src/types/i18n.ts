@@ -204,4 +204,6 @@ export interface TranslationKeys {
     loginRequired: string;
     sessionExpired: string;
   };
-}
+} 
+
+export default TranslationKeys;

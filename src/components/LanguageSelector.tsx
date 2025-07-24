@@ -11,14 +11,13 @@ import { useLanguage } from "@/contexts/LanguageContext";
 type Language = {
   code: string;
   name: string;
-  flag: string;
 };
 
 const languages: Language[] = [
-  { code: "en", name: "English", flag: "🇬🇧" },
-  { code: "af", name: "Afrikaans", flag: "🇿🇦" },
-  { code: "zu", name: "Zulu", flag: "🇿🇦" },
-  { code: "xh", name: "isiXhosa", flag: "🇿🇦" },
+  { code: "en", name: "English" },
+  { code: "af", name: "Afrikaans" },
+  { code: "zu", name: "Zulu" },
+  { code: "xh", name: "isiXhosa" },
 ];
 
 export default function LanguageSelector() {
@@ -43,18 +42,12 @@ export default function LanguageSelector() {
         className="w-auto h-10 border-none bg-transparent focus:ring-0 text-sm" 
         aria-label="Select Language"
       >
-        <div className="flex items-center gap-2">
-          <span>{languages.find(l => l.code === language)?.flag}</span>
-          <SelectValue placeholder="Language" />
-        </div>
+        <SelectValue placeholder="Language" />
       </SelectTrigger>
-      <SelectContent align="end" className="w-[180px]">
+      <SelectContent align="end" className="w-[140px]">
         {languages.map((lang) => (
           <SelectItem key={lang.code} value={lang.code} className="cursor-pointer">
-            <div className="flex items-center gap-3">
-              <span className="text-lg">{lang.flag}</span>
-              <span className="font-medium">{lang.name}</span>
-            </div>
+            <span className="font-medium">{lang.name}</span>
           </SelectItem>
         ))}
       </SelectContent>

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -52,7 +51,6 @@ export default function OwnerLogin() {
           <Button type="submit" className="w-full btn-primary" disabled={isLoading}>{isLoading ? 'Logging in...' : 'Login'}</Button>
         </form>
       </main>
-      <Footer />
     </div>
   );
 } 

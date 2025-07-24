@@ -147,4 +147,6 @@ describe('API Services', () => {
       expect(result).toEqual(mockStatus);
     });
   });
-});
+}); 
+
+export default API;

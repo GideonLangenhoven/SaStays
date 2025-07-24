@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { format, differenceInDays } from 'date-fns';
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,11 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, AlertCircle, MapPin, Users, Bed, Bath, ArrowLeft } from "lucide-react";
+import { Loader2, AlertCircle, MapPin, Users, Bed, Bath, ArrowLeft, CreditCard } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { supabase } from "@/supabaseClient";
 import { toast } from "sonner";
 import { ApartmentProps } from "@/components/ApartmentCard";
+import PaymentModal from "@/components/PaymentModal";
 
 export default function BookingPage() {
     const [searchParams] = useSearchParams();
@@ -42,6 +42,9 @@ export default function BookingPage() {
         email: '',
         phone: '',
     });
+
+    const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+    const [bookingId, setBookingId] = useState<string | null>(null);
 
     useEffect(() => {
         if (!propertyId) {
@@ -114,31 +117,38 @@ export default function BookingPage() {
 
         setLoading(true);
         try {
-            // In a real app, you might want to find or create a customer record first.
-            // For now, we'll proceed directly to creating the booking.
-            
+            // Create the booking record first
             const { data, error } = await supabase.from('bookings').insert([{
                 property_id: property.id,
-                // In a real app with user accounts, you would use the logged-in user's ID.
-                // For now, we'll create a placeholder customer or use a guest checkout flow.
-                // This part would need to be fleshed out with customer management.
                 customer_id: 1, // Placeholder customer_id
                 start_date: format(dateRange.from, 'yyyy-MM-dd'),
                 end_date: format(dateRange.to, 'yyyy-MM-dd'),
                 total_price: totalPrice,
-                status: 'pending' // All bookings start as pending for now
-            }]);
+                status: 'pending', // Pending until payment is completed
+                guest_name: guestDetails.name,
+                guest_email: guestDetails.email,
+                guest_phone: guestDetails.phone,
+                guest_count: guests
+            }]).select();
 
             if (error) throw error;
             
-            toast.success("Booking request submitted successfully!");
-            navigate(`/booking-confirmation?status=pending_approval&booking_id=${data?.[0]?.id}`);
+            if (data && data[0]) {
+                setBookingId(data[0].id);
+                setPaymentModalOpen(true);
+                toast.success("Booking created! Please complete payment.");
+            }
 
         } catch (err: any) {
             toast.error(err.message || "An error occurred during booking.");
         } finally {
             setLoading(false);
         }
+    };
+
+    const handlePaymentSuccess = (paymentReference: string) => {
+        toast.success("Payment successful! Your booking is confirmed.");
+        navigate(`/booking-confirmation?status=confirmed&booking_id=${bookingId}&payment_ref=${paymentReference}`);
     };
     
     if (loading) {
@@ -192,14 +202,31 @@ export default function BookingPage() {
                             </CardContent>
                         </Card>
 
-                        {/* Payment Card Placeholder */}
+                        {/* Payment Information */}
                         <Card>
                             <CardHeader>
-                                <CardTitle>Payment Information</CardTitle>
-                                <CardDescription>Payment integration coming soon.</CardDescription>
+                                <CardTitle className="flex items-center gap-2">
+                                    <CreditCard className="h-5 w-5" />
+                                    Payment Information
+                                </CardTitle>
+                                <CardDescription>
+                                    You'll complete payment after submitting your booking details.
+                                </CardDescription>
                             </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-muted-foreground">The full payment flow will be implemented in a future step.</p>
+                            <CardContent className="space-y-4">
+                                <p className="text-sm text-muted-foreground">
+                                    We accept multiple payment methods including:
+                                </p>
+                                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                                    <div>• PayFast (Cards)</div>
+                                    <div>• Ozow (Bank Transfer)</div>
+                                    <div>• Zapper</div>
+                                    <div>• SnapScan</div>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 p-2 rounded">
+                                    <span>🔒</span>
+                                    <span>Your payment will be processed securely</span>
+                                </div>
                             </CardContent>
                         </Card>
                     </div>
@@ -241,14 +268,30 @@ export default function BookingPage() {
                                     <div className="flex justify-between font-bold text-lg"><span>Total</span> <span>R {totalPrice.toLocaleString()}</span></div>
                                 </div>
                                 <Button type="submit" className="w-full" disabled={loading || nights === 0}>
-                                    {loading ? <Loader2 className="animate-spin" /> : "Request to Book"}
+                                    {loading ? <Loader2 className="animate-spin" /> : "Continue to Payment"}
                                 </Button>
                             </CardContent>
                         </Card>
                     </div>
                 </form>
             </main>
-            <Footer />
+            
+            {/* Payment Modal */}
+            {bookingId && property && dateRange?.from && dateRange?.to && (
+                <PaymentModal
+                    isOpen={paymentModalOpen}
+                    onClose={() => setPaymentModalOpen(false)}
+                    bookingData={{
+                        bookingId,
+                        propertyTitle: property.title,
+                        dates: `${format(dateRange.from, 'MMM dd')} - ${format(dateRange.to, 'MMM dd, yyyy')}`,
+                        guests,
+                        totalAmount: totalPrice
+                    }}
+                    onPaymentSuccess={handlePaymentSuccess}
+                />
+            )}
         </div>
     );
-}
+} 
+

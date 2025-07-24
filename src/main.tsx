@@ -85,3 +85,4 @@ if (!rootElement) {
 
 // Log when the script has finished executing
 console.log('[DEBUG] main.tsx: Script execution complete');
+

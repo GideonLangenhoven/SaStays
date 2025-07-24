@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react"; // Add useCallback
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -234,7 +233,6 @@ export default function Gallery() {
         )}
       </main>
       
-      <Footer />
     </div>
   );
 }

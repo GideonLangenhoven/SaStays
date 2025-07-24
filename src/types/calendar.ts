@@ -37,4 +37,6 @@ export interface CalendarSettings {
   checkOutTime: string;
   weekendPricing: boolean;
   instantBook: boolean;
-} 
+}     
+
+export default CalendarSettings;

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -226,7 +225,7 @@ export default function Contact() {
           </div>
         </section>
       </main>
-      <Footer />
     </div>
   );
 }
+

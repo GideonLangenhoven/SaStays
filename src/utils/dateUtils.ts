@@ -50,4 +50,5 @@ export class DateUtils {
     const msPerDay = 24 * 60 * 60 * 1000;
     return Math.ceil((endDate.getTime() - startDate.getTime()) / msPerDay);
   }
-} 
+}   
+  

@@ -1,7 +1,6 @@
 // src/pages/Apartments.tsx
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import ApartmentCard, { ApartmentProps } from "@/components/ApartmentCard"; // Ensure this matches the new interface
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +13,6 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { supabase } from "@/supabaseClient"; // Import Supabase client
 import { Loader2 } from "lucide-react";
 
 export default function Apartments() {
@@ -32,16 +30,33 @@ export default function Apartments() {
   useEffect(() => {
     const fetchProperties = async () => {
         setLoading(true);
-        const { data, error } = await supabase
-            .from('properties')
-            .select('*')
-            .eq('status', 'active'); // Only show active properties
-
-        if (error) {
+        try {
+            console.log('Fetching properties for apartments page...');
+            const response = await fetch('http://localhost:5001/api/properties');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const properties = await response.json();
+            console.log('Fetched properties:', properties);
+            
+            // Map the API response to match ApartmentProps interface
+            const mappedProperties = properties.map((property: any) => ({
+                id: property.id,
+                title: property.title,
+                description: property.description,
+                price_per_night: parseFloat(property.nightly_price),
+                capacity: property.max_guests,
+                location: property.location,
+                image_url: property.images && property.images.length > 0 ? property.images[0] : "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800",
+                amenities: property.amenities || []
+            }));
+            
+            setAllApartments(mappedProperties);
+            setFilteredApartments(mappedProperties);
+        } catch (error) {
             console.error("Failed to fetch properties:", error);
-        } else {
-            setAllApartments(data || []);
-            setFilteredApartments(data || []);
         }
         setLoading(false);
     };
@@ -172,7 +187,6 @@ export default function Apartments() {
         </section>
       </main>
 
-      <Footer />
     </div>
   );
 }

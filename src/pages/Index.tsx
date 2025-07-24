@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from "react";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
 import BookingForm from "@/components/BookingForm";
 import TestimonialsSection from "@/components/TestimonialsSection";
@@ -9,8 +8,50 @@ import ApartmentCard, { ApartmentProps } from "@/components/ApartmentCard";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { AppProvider } from '../contexts/AppContextDemo';
-import AppContextDemo from '../contexts/AppContextDemo';
+import { Calendar, Shield, CreditCard, MessageCircle, BarChart3, Globe, Clock, Users } from "lucide-react";
+
+// Real-time booking features as described in README
+const systemFeatures = [
+  {
+    icon: <Calendar className="h-8 w-8" />,
+    title: "Real-Time Booking System",
+    description: "Instant booking with calendar synchronization and double-booking prevention across all platforms."
+  },
+  {
+    icon: <CreditCard className="h-8 w-8" />,
+    title: "Multi-Platform Payments",
+    description: "Integrated South African payment providers: Ozow, PayFast, Zapper, and SnapScan."
+  },
+  {
+    icon: <Shield className="h-8 w-8" />,
+    title: "POPIA Compliant",
+    description: "Secure customer data management with full privacy protection compliance."
+  },
+  {
+    icon: <MessageCircle className="h-8 w-8" />,
+    title: "Guest Communication",
+    description: "Unified inbox for seamless owner-guest messaging and automated notifications."
+  },
+  {
+    icon: <BarChart3 className="h-8 w-8" />,
+    title: "Owner Dashboard",
+    description: "Performance metrics, earnings tracking, and comprehensive property management."
+  },
+  {
+    icon: <Globe className="h-8 w-8" />,
+    title: "Multi-Language Support",
+    description: "Available in English, Afrikaans, Xhosa, and Zulu for diverse South African guests."
+  }
+];
+
+// Payment methods supported as per README
+const paymentMethods = [
+  { name: "Ozow", logo: "https://via.placeholder.com/120x40/0066cc/ffffff?text=Ozow", description: "Instant EFT payments" },
+  { name: "PayFast", logo: "https://via.placeholder.com/120x40/ff6600/ffffff?text=PayFast", description: "Secure online payments" },
+  { name: "Zapper", logo: "https://via.placeholder.com/120x40/8b5cf6/ffffff?text=Zapper", description: "QR code payments" },
+  { name: "SnapScan", logo: "https://via.placeholder.com/120x40/10b981/ffffff?text=SnapScan", description: "Quick scan & pay" }
+];
+
 
 // Featured apartments with South African locations and ZAR pricing
 const featuredApartments: ApartmentProps[] = [
@@ -232,6 +273,8 @@ function BlogCard({ title, intro, info, articleLink, stats, bgImage }: BlogCardP
 export default function Index() {
   const { t } = useLanguage();
   const [selectedApartment, setSelectedApartment] = useState<ApartmentProps | null>(null);
+  const [featuredProperties, setFeaturedProperties] = useState<ApartmentProps[]>(featuredApartments);
+  const [loading, setLoading] = useState(false);
   
   // BlogCard image indexes
   const [card1Index, setCard1Index] = useState(0);
@@ -251,48 +294,58 @@ export default function Index() {
     };
   }, []);
 
+  // Fetch properties from API if available, fallback to static data
+  useEffect(() => {
+    const fetchProperties = async () => {
+      setLoading(true);
+      try {
+        console.log('Attempting to fetch properties from API...');
+        const response = await fetch('http://localhost:5001/api/properties');
+        
+        if (response.ok) {
+          const properties = await response.json();
+          console.log('Successfully fetched properties from API:', properties);
+          
+          // Map API response to ApartmentProps interface and take first 3
+          const mappedProperties = properties.slice(0, 3).map((property: any) => ({
+            id: property.id,
+            title: property.title,
+            description: property.description,
+            price_per_night: parseFloat(property.nightly_price),
+            capacity: property.max_guests,
+            location: property.location,
+            image_url: property.images && property.images.length > 0 ? property.images[0] : "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800",
+            amenities: property.amenities || []
+          }));
+          
+          setFeaturedProperties(mappedProperties);
+        } else {
+          console.log('API not available, using fallback data');
+          setFeaturedProperties(featuredApartments);
+        }
+      } catch (error) {
+        console.log("API not available, using fallback data:", error);
+        setFeaturedProperties(featuredApartments);
+      }
+      setLoading(false);
+    };
+
+    fetchProperties();
+  }, []);
+
   useEffect(() => {
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
   }, []);
   
-  // Feature items
-  const features = [
-    {
-      icon: <span className="h-8 w-8" />,
-      title: t.home.amenities.features.beachfront.title,
-      description: t.home.amenities.features.beachfront.description
-    },
-    {
-      icon: <span className="h-8 w-8" />,
-      title: t.home.amenities.features.pools.title,
-      description: t.home.amenities.features.pools.description
-    },
-    {
-      icon: <span className="h-8 w-8" />,
-      title: t.home.amenities.features.restaurant.title,
-      description: t.home.amenities.features.restaurant.description
-    },
-    {
-      icon: <span className="h-8 w-8" />,
-      title: t.home.amenities.features.wifi.title,
-      description: t.home.amenities.features.wifi.description
-    },
-    {
-      icon: <span className="h-8 w-8" />,
-      title: t.home.amenities.features.bar.title,
-      description: t.home.amenities.features.bar.description
-    }
-  ];
-  
   return (
-    <AppProvider>
-      <AppContextDemo />
       <div className="min-h-screen flex flex-col bg-background">
         <Navbar />
         <main className="flex-1 pt-20">
           {/* Hero Section */}
           <HeroSection />
+          
+
           {/* Welcome Section */}
           <section id="welcome" className="section bg-white dark:bg-card">
             <div className="container">
@@ -310,36 +363,91 @@ export default function Index() {
                   <p className="text-muted-foreground mb-8 text-base" style={{ fontSize: '0.75rem' }}>
                     {t.home.welcome.description2}
                   </p>
-                  <Button asChild className="btn-primary text-base px-4 py-2 rounded-full shadow-md">
-                    <Link to="/about">
-                      {t.home.welcome.learnMore} <span className="h-3 w-3" />
-                    </Link>
-                  </Button>
+                  <div className="flex gap-4">
+                    <Button asChild className="btn-primary text-base px-4 py-2 rounded-full shadow-md">
+                      <Link to="/owner-login">
+                        Owner Dashboard
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" className="text-base px-4 py-2 rounded-full">
+                      <Link to="/apartments">
+                        {t.home.welcome.learnMore}
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
                 <div className="relative animate-fade-in [animation-delay:300ms] flex flex-row gap-4 justify-center items-center">
                   <BlogCard
-                    title="10 inspiring photos"
-                    intro="Inspiration"
-                    info="Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim..."
-                    articleLink="Read Article"
-                    stats={[
-                    ]}
+                    title="Real-Time Booking"
+                    intro="Technology"
+                    info="Experience our instant booking system with real-time calendar synchronization and zero double-booking guarantee across all platforms."
+                    articleLink="Learn More"
+                    stats={[]}
                     bgImage={blogCard1Images[card1Index]}
                   />
                   <BlogCard
-                    title="7 travel tips"
-                    intro="Travel"
-                    info="Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam..."
-                    articleLink="Read Article"
-                    stats={[
-                     
-                    ]}
+                    title="Secure Payments"
+                    intro="Safety"
+                    info="Multiple South African payment options including Ozow, PayFast, Zapper, and SnapScan with POPIA-compliant data protection."
+                    articleLink="View Methods"
+                    stats={[]}
                     bgImage={blogCard2Images[card2Index]}
                   />
                 </div>
               </div>
             </div>
           </section>
+          
+          {/* System Features Section - NEW: Showcasing README functionality */}
+          <section className="py-20 bg-muted/50">
+            <div className="container">
+              <div className="text-center max-w-3xl mx-auto mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                  Production-Ready Platform Features
+                </h2>
+                <p className="text-muted-foreground text-lg">
+                  Comprehensive property management system with real-time capabilities and South African market focus.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {systemFeatures.map((feature, index) => (
+                  <div key={index} className="bg-card p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                    <div className="text-primary mb-4">{feature.icon}</div>
+                    <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
+                    <p className="text-muted-foreground">{feature.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Payment Methods Section - NEW: Highlighting supported methods */}
+          <section className="py-16 bg-white dark:bg-card">
+            <div className="container">
+              <div className="text-center max-w-3xl mx-auto mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                  Trusted Payment Partners
+                </h2>
+                <p className="text-muted-foreground text-lg">
+                  Secure, local payment solutions for South African guests and property owners.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
+                {paymentMethods.map((method, index) => (
+                  <div key={index} className="text-center p-4 rounded-lg hover:bg-muted/50 transition-colors">
+                    <img 
+                      src={method.logo} 
+                      alt={method.name}
+                      className="mx-auto mb-3 h-10 object-contain"
+                    />
+                    <h4 className="font-semibold mb-1">{method.name}</h4>
+                    <p className="text-sm text-muted-foreground">{method.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
           {/* Booking Form Section */}
           <section className="relative py-20 bg-gradient-to-r from-sea-light to-white dark:from-sea-dark dark:to-background overflow-hidden">
             <div className="container relative z-10">
@@ -358,7 +466,7 @@ export default function Index() {
                     {t.home.booking.benefits.map((item, index) => (
                       <li key={index} className="flex items-center text-base">
                         <div className="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-3">
-                          <span className="h-3 w-3" />
+                          <Shield className="h-3 w-3" />
                         </div>
                         {item}
                       </li>
@@ -374,6 +482,7 @@ export default function Index() {
               </div>
             </div>
           </section>
+          
           {/* Featured Apartments */}
           <section className="section bg-white dark:bg-card">
             <div className="container">
@@ -389,7 +498,13 @@ export default function Index() {
                 </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {featuredApartments.map((apartment, index) => (
+                {loading ? (
+                  <div className="text-center py-8 col-span-full">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                    <p className="mt-2 text-muted-foreground">Loading properties...</p>
+                  </div>
+                ) : (
+                  featuredProperties.map((apartment, index) => (
                   <div key={apartment.id} className="animate-fade-in" style={{ animationDelay: `${(index + 1) * 100}ms` }}>
                     <div className="bg-card rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
                       <div className="relative h-48 overflow-hidden">
@@ -399,10 +514,13 @@ export default function Index() {
                           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                         <div className="absolute top-3 left-3 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center">
-                          <span className="h-3 w-3 mr-1" />
+                          <Calendar className="h-3 w-3 mr-1" />
                           {apartment.location}
                         </div>
-                        {/* Removed rating as it's not in ApartmentProps */}
+                        <div className="absolute top-3 right-3 bg-green-500/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium text-white flex items-center">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Available Now
+                        </div>
                       </div>
                       <div className="p-5">
                         <div className="flex justify-between items-start mb-2">
@@ -412,10 +530,9 @@ export default function Index() {
                         <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{apartment.description}</p>
                         <div className="flex items-center text-sm text-muted-foreground mb-4">
                           <div className="flex items-center mr-4">
-                            <span className="h-4 w-4 mr-1" />
+                            <Users className="h-4 w-4 mr-1" />
                             {apartment.capacity} {apartment.capacity > 1 ? 'Guests' : 'Guest'}
                           </div>
-                          {/* Removed size as it's not in ApartmentProps */}
                           <div className="flex items-center bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
                             Cape Town
                           </div>
@@ -433,17 +550,18 @@ export default function Index() {
                           )}
                         </div>
                         <Button className="w-full mt-2" onClick={() => setSelectedApartment(apartment)}>
-                          View Details
+                          View Details & Book Now
                         </Button>
                       </div>
                     </div>
                   </div>
-                ))}
+                ))
+                )}
               </div>
               <div className="text-center mt-12">
                 <Button asChild className="btn-primary text-lg px-6 py-3 rounded-full shadow-md">
                   <Link to="/apartments">
-                    {t.home.featuredApartments.viewAll} <span className="h-3 w-3" />
+                    {t.home.featuredApartments.viewAll} <Calendar className="h-3 w-3 ml-2" />
                   </Link>
                 </Button>
               </div>
@@ -472,11 +590,10 @@ export default function Index() {
                       <div className="flex items-center gap-4 mb-2">
                         <span className="text-lg font-bold text-primary">R{selectedApartment.price_per_night.toLocaleString('en-ZA')}</span>
                         <span className="text-sm text-muted-foreground">/night</span>
-                        {/* Removed rating as it's not in ApartmentProps */}
+                        <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">Real-time pricing</span>
                       </div>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
                         <span>{selectedApartment.capacity} {selectedApartment.capacity > 1 ? 'Guests' : 'Guest'}</span>
-                        {/* Removed size as it's not in ApartmentProps */}
                         <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">{selectedApartment.location}</span>
                       </div>
                       <p className="text-base text-foreground mb-4">{selectedApartment.description}</p>
@@ -487,21 +604,31 @@ export default function Index() {
                           </span>
                         ))}
                       </div>
-                      <Button asChild className="w-full mt-2">
-                        <Link to={`/apartments/${selectedApartment.id}`} onClick={() => setSelectedApartment(null)}>
-                          Go to Apartment Page
-                        </Link>
-                      </Button>
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        <Button asChild className="w-full">
+                          <Link to={`/apartments/${selectedApartment.id}`} onClick={() => setSelectedApartment(null)}>
+                            View Full Details
+                          </Link>
+                        </Button>
+                        <Button asChild variant="default" className="w-full bg-green-600 hover:bg-green-700">
+                          <Link to="/booking" onClick={() => setSelectedApartment(null)}>
+                            Book Now
+                          </Link>
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             )}
           </section>
+          
           {/* Testimonials Section */}
           <TestimonialsSection />
+          
           {/* Facilities Section */}
           <FacilitiesSection />
+          
           {/* CTA Section */}
           <section className="relative py-24 bg-primary/5">
             <div className="container">
@@ -512,9 +639,14 @@ export default function Index() {
                 <p className="text-muted-foreground mb-8 text-lg">
                   {t.home.cta.description}
                 </p>
-                <Button asChild size="lg" className="btn-primary text-lg px-8 py-4 rounded-full shadow-lg">
-                  <Link to="/booking">{t.home.cta.bookNow}</Link>
-                </Button>
+                <div className="flex gap-4 justify-center flex-wrap">
+                  <Button asChild size="lg" className="btn-primary text-lg px-8 py-4 rounded-full shadow-lg">
+                    <Link to="/booking">{t.home.cta.bookNow}</Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="text-lg px-8 py-4 rounded-full">
+                    <Link to="/owner-login">Owner Dashboard</Link>
+                  </Button>
+                </div>
               </div>
             </div>
             {/* Decorative waves */}
@@ -537,8 +669,6 @@ export default function Index() {
             </div>
           </section>
         </main>
-        <Footer />
       </div>
-    </AppProvider>
   );
 }
