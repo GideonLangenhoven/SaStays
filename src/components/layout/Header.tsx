@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell, Menu, User, MessageSquare, Settings } from 'lucide-react';
-import { useAuth } from '../../contexts/AppContextDemo';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface HeaderProps {
   onMenuClick?: () => void;

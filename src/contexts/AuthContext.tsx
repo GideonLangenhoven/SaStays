@@ -2,21 +2,30 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import axios from 'axios';
 
-export interface Owner {
+export interface User {
   id: number;
   email: string;
   first_name: string;
   last_name: string;
   phone_number?: string;
   profile_image_url?: string;
-  email_verified: boolean;
-  phone_verified: boolean;
+  email_verified?: boolean;
+  phone_verified?: boolean;
+  role: 'owner' | 'guest' | 'co-host';
+  full_name?: string;
+}
+
+export interface Owner extends User {
+  role: 'owner' | 'co-host';
 }
 
 interface AuthContextType {
+  user: User | null;
   owner: Owner | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginOwner: (email: string, password: string) => Promise<void>;
+  loginGuest: (email: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   updateOwner: (data: Partial<Owner>) => Promise<void>;
@@ -33,11 +42,13 @@ interface RegisterData {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Configure axios defaults
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+axios.defaults.baseURL = apiUrl;
+console.log('Axios configured with baseURL:', apiUrl);
 
 // Add request interceptor to include auth token
 axios.interceptors.request.use((config) => {
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem('auth_token') || localStorage.getItem('owner_jwt');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -57,8 +68,10 @@ axios.interceptors.response.use(
 );
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [owner, setOwner] = useState<Owner | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const owner = user && (user.role === 'owner' || user.role === 'co-host') ? user as Owner : null;
 
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
@@ -72,34 +85,75 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchOwnerProfile = async () => {
     try {
       const response = await axios.get('/auth/profile');
-      setOwner(response.data.owner);
+      setUser(response.data.user || response.data.owner);
     } catch (error) {
-      console.error('Failed to fetch owner profile:', error);
+      console.error('Failed to fetch user profile:', error);
       localStorage.removeItem('auth_token');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const loginOwner = async (email: string, password: string) => {
     try {
-      const response = await axios.post('/auth/login', { email, password });
+      console.log('Attempting owner login with:', { email, baseURL: axios.defaults.baseURL });
+      const response = await axios.post('/owner/login', { email, password });
+      console.log('Owner login successful:', response.data.owner?.email);
       const { token, owner } = response.data;
-      
       localStorage.setItem('auth_token', token);
-      setOwner(owner);
+      setUser({ ...owner, role: 'owner' });
+      console.log('User state updated for owner:', owner.email);
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Login failed');
+      console.error('Owner login failed:', error.message);
+      if (error.response) {
+        console.error('Server response:', error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error('No response from server:', error.request);
+      }
+      throw new Error(error.response?.data?.message || `Owner login failed: ${error.message}`);
+    }
+  };
+
+  const loginGuest = async (email: string, password: string) => {
+    try {
+      console.log('Attempting guest login with:', { email, baseURL: axios.defaults.baseURL });
+      const response = await axios.post('/auth/login', { email, password });
+      console.log('Guest login successful:', response.data.user?.email);
+      const { token, user } = response.data;
+      localStorage.setItem('auth_token', token);
+      setUser({ ...user, role: 'guest' });
+      console.log('User state updated for guest:', user.email);
+    } catch (error: any) {
+      console.error('Guest login failed:', error.message);
+      if (error.response) {
+        console.error('Server response:', error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error('No response from server:', error.request);
+      }
+      throw new Error(error.response?.data?.message || `Guest login failed: ${error.message}`);
+    }
+  };
+
+  const login = async (email: string, password: string) => {
+    // Default behavior - try owner first, then guest
+    try {
+      await loginOwner(email, password);
+    } catch (ownerError) {
+      try {
+        await loginGuest(email, password);
+      } catch (guestError) {
+        throw ownerError; // Throw the original owner error
+      }
     }
   };
 
   const register = async (data: RegisterData) => {
     try {
       const response = await axios.post('/auth/register', data);
-      const { token, owner } = response.data;
+      const { token, owner, user } = response.data;
       
       localStorage.setItem('auth_token', token);
-      setOwner(owner);
+      setUser(owner || user);
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Registration failed');
     }
@@ -107,13 +161,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem('auth_token');
-    setOwner(null);
+    setUser(null);
   };
 
   const updateOwner = async (data: Partial<Owner>) => {
     try {
       const response = await axios.put('/auth/profile', data);
-      setOwner(response.data.owner);
+      setUser(response.data.owner || response.data.user);
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Update failed');
     }
@@ -121,9 +175,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{
+      user,
       owner,
       isLoading,
       login,
+      loginOwner,
+      loginGuest,
       register,
       logout,
       updateOwner

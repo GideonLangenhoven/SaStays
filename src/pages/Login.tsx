@@ -1,29 +1,31 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Loader2 } from 'lucide-react';
+import { Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('guest@test.com');
+  const [password, setPassword] = useState('password123');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, user } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const { loginGuest, user } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await login(email, password);
-      // The redirect is now handled by the AuthContext's onAuthStateChange listener
-      // which will navigate based on role after getting the user profile.
-    } catch (error) {
-      // Error toast is already handled in the context's login function
+      await loginGuest(email, password);
+      toast.success('Login successful!');
+      // Navigation will be handled by useEffect
+    } catch (error: any) {
       console.error('Login page error:', error);
+      toast.error(error.message || 'Login failed');
     } finally {
       setIsLoading(false);
     }
@@ -32,15 +34,19 @@ export default function Login() {
   // This useEffect will navigate the user away if they are already logged in
   useEffect(() => {
     if (user) {
-        switch (user.role) {
-            case 'owner':
-            case 'co-host':
-              navigate('/owner-dashboard');
-              break;
-            case 'guest':
-              navigate('/'); // or a guest dashboard if you create one
-              break;
-          }
+      console.log('User logged in:', user);
+      switch (user.role) {
+        case 'owner':
+        case 'co-host':
+          navigate('/owner');
+          break;
+        case 'guest':
+          navigate('/guest-dashboard'); // Redirect to guest dashboard
+          break;
+        default:
+          navigate('/');
+          break;
+      }
     }
   }, [user, navigate]);
 
@@ -62,7 +68,7 @@ export default function Login() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="guest@test.com (auto-filled)"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
@@ -76,13 +82,20 @@ export default function Login() {
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
-                  type="password"
-                  placeholder="••••••••"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="password123 (auto-filled)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 pr-10"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
             <div className="flex items-center justify-between">

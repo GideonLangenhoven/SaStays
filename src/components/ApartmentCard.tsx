@@ -3,16 +3,22 @@ import { Button } from './ui/button';
 import { Link } from 'react-router-dom';
 import { MapPin, Users, Home } from 'lucide-react';
 
-// This interface now reflects the columns in our Supabase 'properties' table
+// This interface now reflects the columns in our Express API 'properties' table
 export interface ApartmentProps {
   id: number;
   title: string;
   description: string;
-  price_per_night: number;
-  capacity: number;
+  price_per_night?: number; // Legacy field
+  nightly_price?: string | number; // Current API field
+  capacity?: number; // Legacy field
+  max_guests?: number; // Current API field
   location: string;
-  image_url: string; // Changed from 'image'
+  image_url?: string; // Legacy field
+  images?: string[]; // Current API field
   amenities: string[];
+  bedrooms?: number;
+  bathrooms?: number;
+  property_type?: string;
 }
 
 const ApartmentCard: React.FC<{ apartment: ApartmentProps }> = ({ apartment }) => {
@@ -20,7 +26,7 @@ const ApartmentCard: React.FC<{ apartment: ApartmentProps }> = ({ apartment }) =
     <div className="bg-card rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
       <div className="relative h-48 overflow-hidden">
         <img
-          src={apartment.image_url || 'https://via.placeholder.com/800x600?text=No+Image'}
+          src={apartment.image_url || (apartment.images && apartment.images[0]) || 'https://via.placeholder.com/800x600?text=No+Image'}
           alt={apartment.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
@@ -37,7 +43,7 @@ const ApartmentCard: React.FC<{ apartment: ApartmentProps }> = ({ apartment }) =
           </div>
           <div className="flex items-center" title="Capacity">
             <Users className="h-4 w-4 mr-1.5" />
-            <span>{apartment.capacity} Guests</span>
+            <span>{apartment.max_guests || apartment.capacity || 1} Guests</span>
           </div>
         </div>
         
@@ -54,16 +60,25 @@ const ApartmentCard: React.FC<{ apartment: ApartmentProps }> = ({ apartment }) =
           )}
         </div>
         
-        <div className="mt-auto flex justify-between items-center">
-            <div className="text-lg font-bold text-primary">
-                R{apartment.price_per_night.toLocaleString('en-ZA')}
-                <span className="text-sm font-normal text-muted-foreground">/night</span>
+        <div className="mt-auto space-y-3">
+            <div className="flex justify-between items-center">
+                <div className="text-lg font-bold text-primary">
+                    R{parseFloat((apartment.nightly_price || apartment.price_per_night || 0).toString()).toLocaleString('en-ZA')}
+                    <span className="text-sm font-normal text-muted-foreground">/night</span>
+                </div>
             </div>
-            <Button asChild size="sm">
-                <Link to={`/apartments/${apartment.id}`}>
-                    View Details
-                </Link>
-            </Button>
+            <div className="flex gap-2">
+                <Button asChild variant="outline" size="sm" className="flex-1">
+                    <Link to={`/apartments/${apartment.id}`}>
+                        View Details
+                    </Link>
+                </Button>
+                <Button asChild size="sm" className="flex-1">
+                    <Link to={`/booking?propertyId=${apartment.id}`}>
+                        Book Now
+                    </Link>
+                </Button>
+            </div>
         </div>
       </div>
     </div>

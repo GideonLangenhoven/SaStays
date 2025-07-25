@@ -11,7 +11,8 @@ import { Loader2, Calendar as CalendarIcon, Users } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { supabase } from "@/supabaseClient"; // Import supabase directly
+import axios from "axios";
+import { cn } from "@/lib/utils";
 
 interface Rating {
     id: number;
@@ -37,16 +38,24 @@ export default function ApartmentPage() {
             const fetchApartmentDetails = async () => {
                 setLoading(true);
                 try {
-                    const { data: propertyData, error: propertyError } = await supabase.from('properties').select('*').eq('id', id).single();
-                    if (propertyError) throw propertyError;
-                    setApartment(propertyData);
+                    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+                    
+                    // Fetch property details using Express API
+                    const propertyResponse = await axios.get(`${apiUrl}/properties/${id}`);
+                    setApartment(propertyResponse.data);
 
+                    // Fetch booked dates using Express API
                     const bookedData = await propertyApi.getPropertyBookedDates(id);
                     setBookedDates(bookedData.map((d: string) => parseISO(d)));
                     
-                    const { data: ratingsData, error: ratingsError } = await supabase.from('reviews').select('*, profiles(full_name)').eq('property_id', id);
-                    if(ratingsError) throw ratingsError;
-                    setRatings(ratingsData.map(r => ({...r, name: r.profiles.full_name, review: r.review_text})));
+                    // Fetch reviews using Express API (if endpoint exists)
+                    try {
+                        const reviewsResponse = await axios.get(`${apiUrl}/properties/${id}/reviews`);
+                        setRatings(reviewsResponse.data || []);
+                    } catch (reviewError) {
+                        console.log('Reviews endpoint not available, using empty array');
+                        setRatings([]);
+                    }
 
                 } catch (error) {
                     console.error("Failed to fetch apartment details:", error);

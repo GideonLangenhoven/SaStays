@@ -15,7 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 export default function Navbar() {
   const { t } = useLanguage();
-  const { owner, logout } = useAuth();
+  const { user, owner, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -122,11 +122,11 @@ export default function Navbar() {
                         </Popover>
                         {owner && (
                             <>
-                                <Button variant="ghost" size="sm" onClick={() => navigate('/owner-dashboard')}>
+                                <Button variant="ghost" size="sm" onClick={() => navigate('/owner')}>
                                     <LayoutDashboard className="mr-2 h-4 w-4" />
                                     Dashboard
                                 </Button>
-                                <Button variant="ghost" size="sm" onClick={() => navigate('/owner-inbox')}>
+                                <Button variant="ghost" size="sm" onClick={() => navigate('/owner/inbox')}>
                                     <Inbox className="mr-2 h-4 w-4" />
                                     Inbox
                                 </Button>
@@ -200,11 +200,11 @@ export default function Navbar() {
                     <p className="font-semibold">Welcome, {owner.first_name || owner.email}</p>
                      {owner && (owner.role === 'owner' || owner.role === 'co-host') && (
                         <>
-                            <Button variant="outline" className="w-full justify-start" onClick={() => {navigate('/owner-dashboard'); setMobileMenuOpen(false);}}>
+                            <Button variant="outline" className="w-full justify-start" onClick={() => {navigate('/owner'); setMobileMenuOpen(false);}}>
                                <LayoutDashboard className="mr-2 h-4 w-4" />
                                Dashboard
                             </Button>
-                            <Button variant="outline" className="w-full justify-start" onClick={() => {navigate('/owner-inbox'); setMobileMenuOpen(false);}}>
+                            <Button variant="outline" className="w-full justify-start" onClick={() => {navigate('/owner/inbox'); setMobileMenuOpen(false);}}>
                                <Inbox className="mr-2 h-4 w-4" />
                                Inbox
                             </Button>

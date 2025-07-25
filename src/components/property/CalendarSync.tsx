@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Calendar, Link, RefreshCw, Copy } from 'lucide-react';
-import { calendarApi } from '../../services/api'; // Assuming you create a calendarApi service
+import { apiService } from '@/services/api';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';

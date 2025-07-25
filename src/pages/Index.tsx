@@ -46,10 +46,10 @@ const systemFeatures = [
 
 // Payment methods supported as per README
 const paymentMethods = [
-  { name: "Ozow", logo: "https://via.placeholder.com/120x40/0066cc/ffffff?text=Ozow", description: "Instant EFT payments" },
-  { name: "PayFast", logo: "https://via.placeholder.com/120x40/ff6600/ffffff?text=PayFast", description: "Secure online payments" },
-  { name: "Zapper", logo: "https://via.placeholder.com/120x40/8b5cf6/ffffff?text=Zapper", description: "QR code payments" },
-  { name: "SnapScan", logo: "https://via.placeholder.com/120x40/10b981/ffffff?text=SnapScan", description: "Quick scan & pay" }
+  { name: "Ozow", logo: "data:image/svg+xml,%3Csvg width='120' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='120' height='40' fill='%230066cc'/%3E%3Ctext x='60' y='25' font-family='Arial' font-size='14' fill='white' text-anchor='middle'%3EOzow%3C/text%3E%3C/svg%3E", description: "Instant EFT payments" },
+  { name: "PayFast", logo: "data:image/svg+xml,%3Csvg width='120' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='120' height='40' fill='%23ff6600'/%3E%3Ctext x='60' y='25' font-family='Arial' font-size='14' fill='white' text-anchor='middle'%3EPayFast%3C/text%3E%3C/svg%3E", description: "Secure online payments" },
+  { name: "Zapper", logo: "data:image/svg+xml,%3Csvg width='120' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='120' height='40' fill='%238b5cf6'/%3E%3Ctext x='60' y='25' font-family='Arial' font-size='14' fill='white' text-anchor='middle'%3EZapper%3C/text%3E%3C/svg%3E", description: "QR code payments" },
+  { name: "SnapScan", logo: "data:image/svg+xml,%3Csvg width='120' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='120' height='40' fill='%2310b981'/%3E%3Ctext x='60' y='25' font-family='Arial' font-size='14' fill='white' text-anchor='middle'%3ESnapScan%3C/text%3E%3C/svg%3E", description: "Quick scan & pay" }
 ];
 
 

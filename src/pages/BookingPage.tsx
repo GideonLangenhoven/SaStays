@@ -11,10 +11,10 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, AlertCircle, MapPin, Users, Bed, Bath, ArrowLeft, CreditCard } from "lucide-react";
 import { DateRange } from "react-day-picker";
-import { supabase } from "@/supabaseClient";
 import { toast } from "sonner";
 import { ApartmentProps } from "@/components/ApartmentCard";
 import PaymentModal from "@/components/PaymentModal";
+import axios from "axios";
 
 export default function BookingPage() {
     const [searchParams] = useSearchParams();
@@ -34,6 +34,8 @@ export default function BookingPage() {
         to: toDate ? new Date(toDate) : undefined,
     });
     const [guests, setGuests] = useState(1);
+    const [adults, setAdults] = useState(2);
+    const [children, setChildren] = useState(0);
     const [nights, setNights] = useState(0);
     const [totalPrice, setTotalPrice] = useState(0);
 
@@ -56,26 +58,18 @@ export default function BookingPage() {
         const fetchPropertyData = async () => {
             setLoading(true);
             try {
-                // Fetch property details
-                const { data: propertyData, error: propertyError } = await supabase
-                    .from('properties')
-                    .select('*')
-                    .eq('id', propertyId)
-                    .single();
-                if (propertyError) throw new Error("Property not found.");
-                setProperty(propertyData);
-
-                // Fetch booked dates for this property
-                const { data: bookings, error: bookingsError } = await supabase
-                    .from('bookings')
-                    .select('start_date, end_date')
-                    .eq('property_id', propertyId)
-                    .in('status', ['confirmed', 'pending']);
+                const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
                 
-                if (bookingsError) throw bookingsError;
+                // Fetch property details
+                const propertyResponse = await axios.get(`${apiUrl}/properties/${propertyId}`);
+                setProperty(propertyResponse.data);
+
+                // Fetch booked dates for this property  
+                const bookingsResponse = await axios.get(`${apiUrl}/properties/${propertyId}/booked-dates`);
+                const bookings = bookingsResponse.data || [];
 
                 const datesToDisable: Date[] = [];
-                bookings.forEach(booking => {
+                bookings.forEach((booking: any) => {
                     let currentDate = new Date(booking.start_date);
                     const endDate = new Date(booking.end_date);
                     while (currentDate < endDate) {
@@ -85,8 +79,10 @@ export default function BookingPage() {
                 });
                 setBookedDates(datesToDisable);
             } catch (err: any) {
-                setError(err.message || "Failed to load property data.");
-                toast.error(err.message || "Failed to load property data.");
+                console.error('BookingPage fetch error:', err);
+                const errorMessage = err.response?.data?.message || err.message || "Failed to load property data.";
+                setError(errorMessage);
+                toast.error(errorMessage);
             } finally {
                 setLoading(false);
             }
@@ -100,13 +96,18 @@ export default function BookingPage() {
             const numNights = differenceInDays(dateRange.to, dateRange.from);
             if (numNights > 0) {
                 setNights(numNights);
-                setTotalPrice(numNights * property.price_per_night);
+                const pricePerNight = property.nightly_price || property.price_per_night || 0;
+                setTotalPrice(numNights * parseFloat(pricePerNight.toString()));
             }
         } else {
             setNights(0);
             setTotalPrice(0);
         }
     }, [dateRange, property]);
+
+    useEffect(() => {
+        setGuests(adults + children);
+    }, [adults, children]);
 
     const handleBookingSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -117,8 +118,10 @@ export default function BookingPage() {
 
         setLoading(true);
         try {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+            
             // Create the booking record first
-            const { data, error } = await supabase.from('bookings').insert([{
+            const bookingData = {
                 property_id: property.id,
                 customer_id: 1, // Placeholder customer_id
                 start_date: format(dateRange.from, 'yyyy-MM-dd'),
@@ -128,19 +131,23 @@ export default function BookingPage() {
                 guest_name: guestDetails.name,
                 guest_email: guestDetails.email,
                 guest_phone: guestDetails.phone,
-                guest_count: guests
-            }]).select();
+                guest_count: guests,
+                adults: adults,
+                children: children
+            };
 
-            if (error) throw error;
+            const response = await axios.post(`${apiUrl}/bookings`, bookingData);
             
-            if (data && data[0]) {
-                setBookingId(data[0].id);
+            if (response.data && response.data.id) {
+                setBookingId(response.data.id);
                 setPaymentModalOpen(true);
                 toast.success("Booking created! Please complete payment.");
             }
 
         } catch (err: any) {
-            toast.error(err.message || "An error occurred during booking.");
+            console.error('Booking creation error:', err);
+            const errorMessage = err.response?.data?.message || err.message || "An error occurred during booking.";
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -196,8 +203,12 @@ export default function BookingPage() {
                                     <Input id="phone" type="tel" required value={guestDetails.phone} onChange={(e) => setGuestDetails({...guestDetails, phone: e.target.value})} />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="guests">Number of Guests</Label>
-                                    <Input id="guests" type="number" min="1" max={property.capacity} value={guests} onChange={(e) => setGuests(parseInt(e.target.value))} />
+                                    <Label htmlFor="adults">Adults</Label>
+                                    <Input id="adults" type="number" min="1" max={property.max_guests || property.capacity || 8} value={adults} onChange={(e) => setAdults(parseInt(e.target.value))} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="children">Children</Label>
+                                    <Input id="children" type="number" min="0" max={property.max_guests || property.capacity || 8} value={children} onChange={(e) => setChildren(parseInt(e.target.value))} />
                                 </div>
                             </CardContent>
                         </Card>
@@ -235,14 +246,14 @@ export default function BookingPage() {
                         {/* Property Summary */}
                         <Card>
                             <CardHeader className="flex flex-row items-start gap-4">
-                                <img src={property.image_url} alt={property.title} className="w-24 h-24 object-cover rounded-lg" />
+                                <img src={property.image_url || (property.images && property.images[0]) || '/placeholder-property.jpg'} alt={property.title} className="w-24 h-24 object-cover rounded-lg" />
                                 <div>
                                     <CardTitle className="text-lg">{property.title}</CardTitle>
                                     <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1"><MapPin className="h-3 w-3" /> {property.location}</p>
                                 </div>
                             </CardHeader>
                             <CardContent className="flex justify-around text-sm text-muted-foreground">
-                                <span className="flex items-center gap-1"><Users className="h-4 w-4" /> {property.capacity} Guests</span>
+                                <span className="flex items-center gap-1"><Users className="h-4 w-4" /> Max {property.max_guests || property.capacity || 1}</span>
                                 <span className="flex items-center gap-1"><Bed className="h-4 w-4" /> {property.bedrooms || 1} Bed(s)</span>
                                 <span className="flex items-center gap-1"><Bath className="h-4 w-4" /> {property.bathrooms || 1} Bath(s)</span>
                             </CardContent>
@@ -263,7 +274,11 @@ export default function BookingPage() {
                                 />
                                 <Separator />
                                 <div className="space-y-2">
-                                    <div className="flex justify-between"><span>Price per night</span> <span>R {property.price_per_night.toLocaleString()}</span></div>
+                                    <div className="flex justify-between text-sm text-muted-foreground">
+                                        <span>Guests: {adults} adults{children > 0 ? `, ${children} children` : ''}</span>
+                                        <span>{guests} total</span>
+                                    </div>
+                                    <div className="flex justify-between"><span>Price per night</span> <span>R {parseFloat(property.nightly_price || property.price_per_night || '0').toLocaleString()}</span></div>
                                     <div className="flex justify-between"><span>Nights</span> <span>{nights}</span></div>
                                     <div className="flex justify-between font-bold text-lg"><span>Total</span> <span>R {totalPrice.toLocaleString()}</span></div>
                                 </div>
@@ -285,7 +300,7 @@ export default function BookingPage() {
                         bookingId,
                         propertyTitle: property.title,
                         dates: `${format(dateRange.from, 'MMM dd')} - ${format(dateRange.to, 'MMM dd, yyyy')}`,
-                        guests,
+                        guests: `${adults} adults${children > 0 ? `, ${children} children` : ''}`,
                         totalAmount: totalPrice
                     }}
                     onPaymentSuccess={handlePaymentSuccess}

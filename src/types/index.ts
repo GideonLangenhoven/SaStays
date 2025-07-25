@@ -104,6 +104,13 @@ export interface Owner {
   createdAt: string;
 }
 
+export enum PaymentMethodEnum {
+  OZOW = 'ozow',
+  PAYFAST = 'payfast',
+  ZAPPER = 'zapper',
+  SNAPSCAN = 'snapscan'
+}
+
 export interface Payment {
   id: string;
   bookingId: string;

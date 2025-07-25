@@ -43,8 +43,8 @@ import {
   DollarSign
 } from 'lucide-react';
 import { format, addDays, differenceInDays, isBefore, isAfter, parseISO } from 'date-fns';
-import { useApp } from '../contexts/AppContextDemo';
-import { propertyApi, bookingApi, paymentApi } from '../services/api';
+import { useApp } from '@/contexts/AppContextDemo';
+import { propertyApi, bookingApi, paymentApi } from '@/services/api';
 
 // Types
 interface BookingFormData {

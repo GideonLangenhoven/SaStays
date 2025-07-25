@@ -17,8 +17,9 @@ import {
   Bath,
   Users,
 } from 'lucide-react';
-import { useApp, useAuth } from '../../contexts/AppContextDemo';
-import { propertyApi } from '../../services/api';
+import { useApp } from '@/contexts/AppContextDemo';
+import { useAuth } from '@/contexts/AuthContext';
+import { propertyApi } from '@/services/api';
 import { PropertyListingForm } from './PropertyListingForm';
 import { toast } from 'sonner';
 

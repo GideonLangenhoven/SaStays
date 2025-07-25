@@ -35,6 +35,9 @@ const Login = lazy(() => import('./pages/Login'));
 const OwnerLogin = lazy(() => import('./pages/OwnerLogin'));
 const OwnerRegister = lazy(() => import('./pages/OwnerRegister'));
 
+// Guest Dashboard
+const GuestDashboard = lazy(() => import('./pages/GuestDashboard'));
+
 // Owner Dashboard & Management
 const OwnerDashboard = lazy(() => import('./pages/OwnerDashboard'));
 const PropertyManagement = lazy(() => import('./pages/PropertyManagement'));
@@ -279,7 +282,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <LanguageProvider>
-            <Router>
+            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <div className="min-h-screen flex flex-col bg-background text-foreground">
                 {/* Network Status Banner */}
                 <NetworkStatusBanner isOnline={isOnline} />
@@ -300,7 +303,6 @@ function App() {
                         <Route path="/apartments" element={<Apartments />} />
                         <Route path="/properties" element={<Navigate to="/apartments" replace />} />
                         <Route path="/apartments/:id" element={<ApartmentPage />} />
-                        <Route path="/properties/:id" element={<Navigate to="/apartments/$1" replace />} />
                         
                         {/* Booking Flow */}
                         <Route path="/booking" element={<BookingPage />} />
@@ -321,6 +323,9 @@ function App() {
                         {/* Guest Authentication */}
                         <Route path="/login" element={<Login />} />
                         <Route path="/guest-login" element={<Navigate to="/login" replace />} />
+                        
+                        {/* Guest Dashboard */}
+                        <Route path="/guest-dashboard" element={<GuestDashboard />} />
                         
                         {/* Owner Authentication & Onboarding */}
                         <Route path="/owner-login" element={<OwnerLogin />} />

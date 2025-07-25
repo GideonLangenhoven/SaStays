@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/supabaseClient';
+import { supabase } from '@/lib/supabase';
 import { format, formatDistanceToNow, parseISO } from 'date-fns';
 import { Loader2, Send, UserCircle, Inbox as InboxIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';

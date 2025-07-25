@@ -187,7 +187,8 @@ router.post('/properties/:id/sync-calendar', auth, async (req, res) => {
 // Create a booking (instant or pending approval)
 router.post('/bookings', async (req, res) => {
     const {
-        property_id, customer_id, start_date, end_date, total_price, status, payment_provider
+        property_id, customer_id, start_date, end_date, total_price, status, payment_provider,
+        guest_name, guest_email, guest_phone, guest_count, adults, children
     } = req.body;
 
     try {
@@ -206,10 +207,11 @@ router.post('/bookings', async (req, res) => {
         // Create booking
         const newBooking = await pool.query(
             `INSERT INTO bookings
-            (property_id, customer_id, start_date, end_date, total_price, status, payment_provider)
-            VALUES ($1,$2,$3,$4,$5,$6,$7)
+            (property_id, customer_id, start_date, end_date, total_amount, status, payment_provider, guest_name, guest_email, guest_phone, guests, adults, children)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
             RETURNING *`,
-            [property_id, customer_id, start_date, end_date, total_price, status, payment_provider]
+            [property_id, customer_id, start_date, end_date, total_price, status || 'pending', payment_provider || 'pending', 
+             guest_name, guest_email, guest_phone, guest_count || (adults + children), adults || 1, children || 0]
         );
 
         res.json(newBooking.rows[0]);
@@ -259,5 +261,145 @@ router.get('/messages/:booking_id', auth, async (req, res) => {
   res.json(result.rows);
 });
 
+// --- Authentication Routes ---
+
+// Owner Login
+router.post('/owner/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Check if owner exists
+    const ownerResult = await pool.query('SELECT * FROM owners WHERE email = $1', [email]);
+    
+    if (ownerResult.rows.length === 0) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const owner = ownerResult.rows[0];
+
+    // Check password
+    const isMatch = await bcrypt.compare(password, owner.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Generate JWT token
+    const payload = {
+      id: owner.id,
+      email: owner.email,
+      role: 'owner'
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '24h' });
+
+    res.json({
+      token,
+      owner: {
+        id: owner.id,
+        email: owner.email,
+        first_name: owner.full_name?.split(' ')[0] || 'Owner',
+        last_name: owner.full_name?.split(' ').slice(1).join(' ') || '',
+        full_name: owner.full_name,
+        role: 'owner'
+      }
+    });
+
+  } catch (err) {
+    console.error('Owner login error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Guest Login  
+router.post('/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Check if guest exists
+    const guestResult = await pool.query('SELECT * FROM guests WHERE email = $1', [email]);
+    
+    if (guestResult.rows.length === 0) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const guest = guestResult.rows[0];
+
+    // Check password
+    const isMatch = await bcrypt.compare(password, guest.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Generate JWT token
+    const payload = {
+      id: guest.id,
+      email: guest.email,
+      role: 'guest'
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '24h' });
+
+    res.json({
+      token,
+      user: {
+        id: guest.id,
+        email: guest.email,
+        first_name: guest.first_name,
+        last_name: guest.last_name,
+        role: 'guest'
+      }
+    });
+
+  } catch (err) {
+    console.error('Guest login error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get User Profile (works for both owners and guests)
+router.get('/auth/profile', auth, async (req, res) => {
+  try {
+    const userId = req.owner.id;
+    const userRole = req.owner.role;
+
+    let user;
+    if (userRole === 'owner') {
+      const result = await pool.query('SELECT * FROM owners WHERE id = $1', [userId]);
+      const owner = result.rows[0];
+      if (owner) {
+        user = {
+          id: owner.id,
+          email: owner.email,
+          first_name: owner.full_name?.split(' ')[0] || 'Owner',
+          last_name: owner.full_name?.split(' ').slice(1).join(' ') || '',
+          full_name: owner.full_name,
+          role: 'owner'
+        };
+      }
+    } else if (userRole === 'guest') {
+      const result = await pool.query('SELECT * FROM guests WHERE id = $1', [userId]);
+      const guest = result.rows[0];
+      if (guest) {
+        user = {
+          id: guest.id,
+          email: guest.email,
+          first_name: guest.first_name,
+          last_name: guest.last_name,
+          role: 'guest'
+        };
+      }
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({ user });
+
+  } catch (err) {
+    console.error('Profile fetch error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 module.exports = router;

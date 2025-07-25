@@ -10,12 +10,16 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
-}
+// If Supabase environment variables are missing, provide fallback values
+// This allows the app to run without Supabase configured
+const fallbackUrl = 'https://placeholder.supabase.co'
+const fallbackKey = 'placeholder_key'
+
+const finalUrl = supabaseUrl || fallbackUrl
+const finalKey = supabaseAnonKey || fallbackKey
 
 // Client-side Supabase client
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient<Database>(finalUrl, finalKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
@@ -36,8 +40,8 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 
 // Service role client for server-side operations
 export const supabaseAdmin = createClient<Database>(
-  supabaseUrl,
-  import.meta.env.SUPABASE_SERVICE_ROLE_KEY || '',
+  finalUrl,
+  import.meta.env.SUPABASE_SERVICE_ROLE_KEY || fallbackKey,
   {
     auth: {
       autoRefreshToken: false,

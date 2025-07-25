@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { QrCodeIcon, CreditCard, Zap, Shield, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import QRCode from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 import { cn } from '@/lib/utils';
 import apiService from '@/services/api';
 import { PaymentMethodEnum } from '@/types';
@@ -80,7 +80,7 @@ const PaymentMethodSelection = ({ onSelect, isProcessing }: { onSelect: (method:
 const QRPayment = ({ method, qrCodeData, countdown, onBack }: { method: PaymentMethod, qrCodeData: string, countdown: number, onBack: () => void }) => (
   <div className="text-center space-y-6">
     <div><h3 className="text-lg font-semibold">Scan to Pay with {method.displayName}</h3><p className="text-sm text-muted-foreground">Open your app and scan the code below</p></div>
-    <div className="flex justify-center"><div className="p-4 bg-white rounded-lg border-2"><QRCode value={qrCodeData} size={200} /></div></div>
+    <div className="flex justify-center"><div className="p-4 bg-white rounded-lg border-2"><QRCodeSVG value={qrCodeData} size={200} /></div></div>
     <div className="space-y-1"><div className="text-2xl font-mono font-bold text-primary">{`${Math.floor(countdown / 60)}:${(countdown % 60).toString().padStart(2, '0')}`}</div><p className="text-xs text-muted-foreground">QR code expires soon</p></div>
     <div className="flex items-center justify-center gap-2"><div className="animate-pulse w-2 h-2 bg-blue-500 rounded-full"></div><span className="text-sm">Waiting for payment...</span></div>
     <Button variant="outline" onClick={onBack}>Choose Different Method</Button>
